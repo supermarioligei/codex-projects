@@ -4,7 +4,6 @@ import type { OrderStatus } from "@/lib/mock-data";
 export const navigationItems = [
   { label: "工作台", href: "/", roles: ["owner", "sales", "photographer"] as UserRole[] },
   { label: "订单管理", href: "/orders", roles: ["owner", "sales", "photographer"] as UserRole[] },
-  { label: "新建订单", href: "/orders/new", roles: ["owner", "sales"] as UserRole[] },
   { label: "人员管理", href: "/staff", roles: ["owner"] as UserRole[] },
   { label: "账务流水", href: "/finance", roles: ["owner", "sales"] as UserRole[] },
   { label: "登记流水", href: "/finance/new", roles: ["owner"] as UserRole[] },
