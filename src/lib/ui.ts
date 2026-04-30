@@ -6,7 +6,6 @@ export const navigationItems = [
   { label: "订单管理", href: "/orders", roles: ["owner", "sales", "photographer"] as UserRole[] },
   { label: "人员管理", href: "/staff", roles: ["owner"] as UserRole[] },
   { label: "账务流水", href: "/finance", roles: ["owner", "sales"] as UserRole[] },
-  { label: "登记流水", href: "/finance/new", roles: ["owner"] as UserRole[] },
   { label: "拍摄排期", href: "/schedule", roles: ["owner", "sales", "photographer"] as UserRole[] },
   { label: "提醒中心", href: "/alerts", roles: ["owner", "sales", "photographer"] as UserRole[] },
   { label: "交付中心", href: "/delivery", roles: ["owner", "sales"] as UserRole[] },
