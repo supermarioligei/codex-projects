@@ -1,0 +1,44 @@
+[
+  {
+    "id": "owner-zhang",
+    "name": "张总",
+    "role": "owner",
+    "title": "经营负责人",
+    "active": true
+  },
+  {
+    "id": "sales-lin",
+    "name": "小林",
+    "role": "sales",
+    "title": "客服统筹",
+    "active": true
+  },
+  {
+    "id": "sales-xiaohe",
+    "name": "小禾",
+    "role": "sales",
+    "title": "交付跟进",
+    "active": true
+  },
+  {
+    "id": "photographer-afeng",
+    "name": "阿峰",
+    "role": "photographer",
+    "title": "主摄影师",
+    "active": true
+  },
+  {
+    "id": "photographer-ziyu",
+    "name": "子瑜",
+    "role": "photographer",
+    "title": "跟拍摄影师",
+    "active": true
+  },
+  {
+    "id": "photographer-anan",
+    "name": "安安",
+    "role": "photographer",
+    "title": "外景摄影师",
+    "active": true
+  }
+]

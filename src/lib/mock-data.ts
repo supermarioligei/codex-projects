@@ -28,6 +28,7 @@ export type Order = {
   amount: string;
   paid: string;
   status: OrderStatus;
+  photographer?: string;
 };
 
 export const dashboardStats = [
@@ -71,6 +72,7 @@ export const orders: Order[] = [
     amount: "¥8,600",
     paid: "¥4,000",
     status: "待拍摄" as OrderStatus,
+    photographer: "阿峰",
   },
   {
     id: "ORD-240428-02",
@@ -85,6 +87,7 @@ export const orders: Order[] = [
     amount: "¥12,800",
     paid: "¥12,800",
     status: "待选片" as OrderStatus,
+    photographer: "子瑜",
   },
   {
     id: "ORD-240428-03",
@@ -99,6 +102,7 @@ export const orders: Order[] = [
     amount: "¥15,200",
     paid: "¥6,000",
     status: "待拍摄" as OrderStatus,
+    photographer: "安安",
   },
   {
     id: "ORD-240428-04",
@@ -113,6 +117,7 @@ export const orders: Order[] = [
     amount: "¥4,200",
     paid: "¥4,200",
     status: "待交付" as OrderStatus,
+    photographer: "阿峰",
   },
 ];
 

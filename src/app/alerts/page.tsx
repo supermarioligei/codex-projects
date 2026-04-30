@@ -1,15 +1,21 @@
 import Link from "next/link";
 import { AdminShell } from "@/components/admin-shell";
+import { filterOrdersForUser, requireSession } from "@/lib/auth";
 import { getFinanceEntries } from "@/lib/finance-store";
 import { getOrders } from "@/lib/order-store";
-import { generateReminders } from "@/lib/reminders";
+import { filterRemindersForPhotographer, generateReminders } from "@/lib/reminders";
 
 export default async function AlertsPage() {
-  const [orders, financeEntries] = await Promise.all([
+  const user = await requireSession();
+  const [allOrders, financeEntries] = await Promise.all([
     getOrders(),
     getFinanceEntries(),
   ]);
-  const reminders = generateReminders(orders, financeEntries);
+  const orders = filterOrdersForUser(allOrders, user);
+  const reminders =
+    user.role === "photographer"
+      ? filterRemindersForPhotographer(generateReminders(orders, financeEntries))
+      : generateReminders(orders, financeEntries);
   const shootCount = reminders.filter((item) => item.category === "拍摄提醒").length;
   const financeCount = reminders.filter((item) => item.category === "财务提醒").length;
   const deliveryCount = reminders.filter((item) => item.category === "交付提醒").length;
@@ -17,13 +23,19 @@ export default async function AlertsPage() {
   return (
     <AdminShell
       activeHref="/alerts"
-      title="提醒中心"
-      description="系统根据订单状态、拍摄日期和关联流水自动生成待办提醒。"
+      title={user.role === "photographer" ? "我的执行提醒" : "提醒中心"}
+      description={
+        user.role === "photographer"
+          ? "系统根据分配给你的订单自动生成拍摄和交付协作提醒。"
+          : "系统根据订单状态、拍摄日期和关联流水自动生成待办提醒。"
+      }
       aside={
         <>
           <p className="text-sm font-semibold">使用建议</p>
           <p className="mt-2 text-sm leading-6 muted">
-            每天先处理高优先级提醒，再跟进本周拍摄且仍有待收尾款的订单，现场和回款都会更稳。
+            {user.role === "photographer"
+              ? "每天先处理高优先级拍摄提醒，再确认明天场次、联系人和需要你协作交付的订单。"
+              : "每天先处理高优先级提醒，再跟进本周拍摄且仍有待收尾款的订单，现场和回款都会更稳。"}
           </p>
         </>
       }
@@ -32,7 +44,9 @@ export default async function AlertsPage() {
         <p className="text-sm uppercase tracking-[0.24em] text-white/74">Alerts</p>
         <h2 className="mt-3 text-2xl font-semibold sm:text-3xl">自动提醒总览</h2>
         <p className="mt-3 max-w-2xl text-sm leading-7 text-white/82">
-          提醒已经不再靠手工录入，而是会根据拍摄日期、订单状态和流水关联自动计算。
+          {user.role === "photographer"
+            ? "提醒会根据分配给你的订单自动计算，只保留你真正需要处理的执行事项。"
+            : "提醒已经不再靠手工录入，而是会根据拍摄日期、订单状态和流水关联自动计算。"}
         </p>
       </div>
 

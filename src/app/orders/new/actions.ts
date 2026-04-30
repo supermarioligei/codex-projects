@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createFinanceEntry } from "@/lib/finance-store";
-import { createOrder } from "@/lib/order-store";
+import { createOrder, findPhotographerConflict } from "@/lib/order-store";
 import type { OrderStatus } from "@/lib/mock-data";
 
 function readText(formData: FormData, key: string) {
@@ -39,6 +39,17 @@ export async function createOrderAction(formData: FormData) {
     !packageName
   ) {
     redirect("/orders/new?error=missing");
+  }
+
+  const conflict = await findPhotographerConflict({
+    photographer,
+    shootDate,
+  });
+
+  if (conflict) {
+    redirect(
+      `/orders/new?error=conflict&photographer=${encodeURIComponent(photographer)}&conflictOrderId=${encodeURIComponent(conflict.id)}`,
+    );
   }
 
   const order = await createOrder({

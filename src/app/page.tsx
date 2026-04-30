@@ -6,12 +6,13 @@ import {
   canEditOrders,
   canViewDelivery,
   canViewFinance,
+  filterOrdersForUser,
   requireSession,
 } from "@/lib/auth";
 import { buildDashboardMetrics } from "@/lib/dashboard";
 import { getFinanceEntries } from "@/lib/finance-store";
 import { getOrders } from "@/lib/order-store";
-import { generateReminders } from "@/lib/reminders";
+import { filterRemindersForPhotographer, generateReminders } from "@/lib/reminders";
 
 function formatCurrency(value: number) {
   return `¥${value.toLocaleString("zh-CN")}`;
@@ -19,8 +20,13 @@ function formatCurrency(value: number) {
 
 export default async function Home() {
   const user = await requireSession();
-  const [orders, financeEntries] = await Promise.all([getOrders(), getFinanceEntries()]);
-  const reminders = generateReminders(orders, financeEntries);
+  const [allOrders, financeEntries] = await Promise.all([getOrders(), getFinanceEntries()]);
+  const orders = filterOrdersForUser(allOrders, user);
+  const baseReminders = generateReminders(orders, financeEntries);
+  const reminders =
+    user.role === "photographer"
+      ? filterRemindersForPhotographer(baseReminders)
+      : baseReminders;
   const metrics = buildDashboardMetrics(orders, financeEntries, reminders);
 
   const quickLinks = [

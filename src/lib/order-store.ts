@@ -198,3 +198,41 @@ export async function getOrderById(orderId: string) {
   const orders = await getOrders();
   return orders.find((order) => order.id === orderId) ?? null;
 }
+
+type PhotographerConflictOptions = {
+  photographer: string;
+  shootDate: string;
+  excludeOrderId?: string;
+};
+
+function normalizeName(value: string) {
+  return value.replace(/\s+/g, "").trim();
+}
+
+export async function findPhotographerConflict({
+  photographer,
+  shootDate,
+  excludeOrderId,
+}: PhotographerConflictOptions) {
+  const currentPhotographer = normalizeName(photographer);
+  const currentShootDate = normalizeShootDate(shootDate);
+
+  if (!currentPhotographer || !currentShootDate) {
+    return null;
+  }
+
+  const orders = await readStoredOrders();
+
+  return (
+    orders.find((order) => {
+      if (excludeOrderId && order.id === excludeOrderId) {
+        return false;
+      }
+
+      return (
+        normalizeName(order.photographer ?? "") === currentPhotographer &&
+        normalizeShootDate(order.shootDate) === currentShootDate
+      );
+    }) ?? null
+  );
+}

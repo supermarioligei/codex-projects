@@ -13,16 +13,21 @@ function hasRoleAccess(pathname: string, role: string | undefined) {
   }
 
   if (role === "sales") {
+    if (pathname.startsWith("/staff")) {
+      return false;
+    }
+
     return !pathname.startsWith("/finance/") || pathname === "/finance";
   }
 
   if (role === "photographer") {
+    const orderDetailOnly = /^\/orders\/[^/]+$/.test(pathname);
     if (
       pathname === "/" ||
       pathname === "/schedule" ||
       pathname === "/alerts" ||
-      pathname.startsWith("/orders/") ||
-      pathname === "/orders"
+      pathname === "/orders" ||
+      orderDetailOnly
     ) {
       return true;
     }

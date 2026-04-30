@@ -4,9 +4,13 @@ import { statusClassName } from "@/lib/ui";
 
 type OrdersTableProps = {
   orders: OrderWithFinanceSummary[];
+  emptyText?: string;
 };
 
-export function OrdersTable({ orders }: OrdersTableProps) {
+export function OrdersTable({
+  orders,
+  emptyText = "当前没有可显示的订单。",
+}: OrdersTableProps) {
   return (
     <div className="overflow-hidden rounded-[1.5rem] border border-[color:var(--line)]">
       <div className="hidden grid-cols-[1.2fr_1fr_1fr_0.8fr_0.7fr] gap-3 bg-[#f6efe6] px-5 py-4 text-xs font-semibold uppercase tracking-[0.18em] text-[#6e7066] md:grid">
@@ -17,7 +21,10 @@ export function OrdersTable({ orders }: OrdersTableProps) {
         <span>状态</span>
       </div>
       <div className="divide-y divide-[color:var(--line)] bg-white/70">
-        {orders.map((order) => (
+        {orders.length === 0 ? (
+          <div className="px-5 py-8 text-sm muted">{emptyText}</div>
+        ) : (
+          orders.map((order) => (
           <div
             key={order.id}
             className="grid gap-3 px-5 py-4 md:grid-cols-[1.2fr_1fr_1fr_0.8fr_0.7fr] md:items-center"
@@ -63,7 +70,8 @@ export function OrdersTable({ orders }: OrdersTableProps) {
               </div>
             </div>
           </div>
-        ))}
+          ))
+        )}
       </div>
     </div>
   );

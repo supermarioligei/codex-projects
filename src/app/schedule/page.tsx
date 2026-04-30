@@ -1,10 +1,12 @@
 import { AdminShell } from "@/components/admin-shell";
 import { ScheduleBoard } from "@/components/schedule-board";
+import { filterOrdersForUser, requireSession } from "@/lib/auth";
 import { buildScheduleBuckets } from "@/lib/schedule";
 import { getOrders } from "@/lib/order-store";
 
 export default async function SchedulePage() {
-  const orders = await getOrders();
+  const user = await requireSession();
+  const orders = filterOrdersForUser(await getOrders(), user);
   const buckets = buildScheduleBuckets(orders);
   const thisWeekRevenue = buckets.thisWeek.reduce(
     (sum, order) => sum + order.receivedTotal,
@@ -14,13 +16,19 @@ export default async function SchedulePage() {
   return (
     <AdminShell
       activeHref="/schedule"
-      title="拍摄排期"
-      description="按今日、明日和本周视角查看即将执行的拍摄任务，提前发现人员和回款风险。"
+      title={user.role === "photographer" ? "我的拍摄排期" : "拍摄排期"}
+      description={
+        user.role === "photographer"
+          ? "只显示分配给你的拍摄任务，方便你专注看今天、明天和本周要执行的场次。"
+          : "按今日、明日和本周视角查看即将执行的拍摄任务，提前发现人员和回款风险。"
+      }
       aside={
         <>
           <p className="text-sm font-semibold">排期建议</p>
           <p className="mt-2 text-sm leading-6 muted">
-            先补齐本周未分配摄影师的场次，再对待收尾款较高的订单提前确认拍摄与交付节奏。
+            {user.role === "photographer"
+              ? "先确认自己本周的场次、出发时间和联系人，再把明天要拍的细节提前对齐。"
+              : "先补齐本周未分配摄影师的场次，再对待收尾款较高的订单提前确认拍摄与交付节奏。"}
           </p>
         </>
       }
@@ -29,7 +37,9 @@ export default async function SchedulePage() {
         <p className="text-sm uppercase tracking-[0.24em] text-white/74">Schedule</p>
         <h2 className="mt-3 text-2xl font-semibold sm:text-3xl">拍摄任务总览</h2>
         <p className="mt-3 max-w-2xl text-sm leading-7 text-white/82">
-          当前排期基于订单拍摄日期自动生成。后面我们还可以继续加摄影师日历、冲突检测和提前提醒。
+          {user.role === "photographer"
+            ? "你在这里看到的是分配给自己的拍摄任务。后面我们还会继续加个人日历、器材清单和拍摄确认。"
+            : "当前排期基于订单拍摄日期自动生成。后面我们还可以继续加摄影师日历、冲突检测和提前提醒。"}
         </p>
       </div>
 

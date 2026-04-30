@@ -11,6 +11,7 @@ export type GeneratedReminder = {
   level: ReminderPriority;
   category: ReminderCategory;
   href: string;
+  orderId?: string;
 };
 
 function toDate(value: string) {
@@ -73,6 +74,7 @@ export function generateReminders(
         level: "高优先级",
         category: "拍摄提醒",
         href: `/orders/${order.id}`,
+        orderId: order.id,
       });
     }
 
@@ -84,6 +86,7 @@ export function generateReminders(
         level: "中优先级",
         category: "拍摄提醒",
         href: `/orders/${order.id}/edit`,
+        orderId: order.id,
       });
     }
 
@@ -97,6 +100,7 @@ export function generateReminders(
         level: order.outstandingAmount >= 5000 ? "高优先级" : "中优先级",
         category: "财务提醒",
         href: `/orders/${order.id}`,
+        orderId: order.id,
       });
     }
 
@@ -111,6 +115,7 @@ export function generateReminders(
         level: "中优先级",
         category: "交付提醒",
         href: `/finance/new`,
+        orderId: order.id,
       });
     }
   }
@@ -132,4 +137,14 @@ export function generateReminders(
       levelOrder[a.level] - levelOrder[b.level]
     );
   });
+}
+
+export function filterRemindersForPhotographer(reminders: GeneratedReminder[]) {
+  return reminders
+    .filter((item) => item.category !== "财务提醒")
+    .map((item) =>
+      item.category === "交付提醒" && item.orderId
+        ? { ...item, href: `/orders/${item.orderId}` }
+        : item,
+    );
 }

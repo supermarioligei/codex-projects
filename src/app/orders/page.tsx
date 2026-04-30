@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { AdminShell } from "@/components/admin-shell";
 import { OrdersTable } from "@/components/orders-table";
-import { canEditOrders, requireSession } from "@/lib/auth";
+import { canEditOrders, filterOrdersForUser, requireSession } from "@/lib/auth";
 import { getOrders } from "@/lib/order-store";
 
 function parseCurrency(value: string) {
@@ -14,7 +14,7 @@ export default async function OrdersPage({
   searchParams: Promise<{ created?: string }>;
 }) {
   const user = await requireSession();
-  const orders = await getOrders();
+  const orders = filterOrdersForUser(await getOrders(), user);
   const params = await searchParams;
   const summaryCards = [
     {
@@ -44,13 +44,19 @@ export default async function OrdersPage({
   return (
     <AdminShell
       activeHref="/orders"
-      title="订单管理"
-      description="集中查看每个学校、班级和拍摄场次的进度、金额与回款状态。"
+      title={user.role === "photographer" ? "我的拍摄订单" : "订单管理"}
+      description={
+        user.role === "photographer"
+          ? "只显示已分配给你的订单，方便你专注查看拍摄和执行信息。"
+          : "集中查看每个学校、班级和拍摄场次的进度、金额与回款状态。"
+      }
       aside={
         <>
           <p className="text-sm font-semibold">跟进建议</p>
           <p className="mt-2 text-sm leading-6 muted">
-            先处理明后两天要拍摄的班级，再逐个催收待交付订单的尾款，避免交片后回款被动。
+            {user.role === "photographer"
+              ? "先确认本周自己要拍的场次，再补齐器材、联系人和出发安排。"
+              : "先处理明后两天要拍摄的班级，再逐个催收待交付订单的尾款，避免交片后回款被动。"}
           </p>
         </>
       }
@@ -68,7 +74,9 @@ export default async function OrdersPage({
             订单总览与跟进
           </h2>
           <p className="mt-3 max-w-2xl text-sm leading-7 muted">
-            这一页会成为业务主操作页，后面我们可以继续加筛选、搜索、状态编辑和订单详情抽屉。
+            {user.role === "photographer"
+              ? "这一页只保留你自己要执行的订单，方便快速查看拍摄地点、时间和协作状态。"
+              : "这一页会成为业务主操作页，后面我们可以继续加筛选、搜索、状态编辑和订单详情抽屉。"}
           </p>
         </div>
         {canEditOrders(user.role) ? (
@@ -96,7 +104,9 @@ export default async function OrdersPage({
           <div>
             <p className="text-sm font-semibold">全部订单</p>
             <p className="mt-1 text-sm muted">
-              现在已经支持本地持久化录入，后面再切数据库时可以直接复用这套页面结构。
+              {user.role === "photographer"
+                ? "如果当前没有订单，通常说明这几天还没有把场次分配到你的名字。"
+                : "现在已经支持本地持久化录入，后面再切数据库时可以直接复用这套页面结构。"}
             </p>
           </div>
           <div className="grid gap-3 sm:grid-cols-3">
@@ -106,7 +116,9 @@ export default async function OrdersPage({
             </div>
             <div className="rounded-2xl border border-[color:var(--line)] bg-white px-4 py-3 text-sm">
               <p className="muted">订单状态</p>
-              <p className="mt-1 font-medium">5 种状态</p>
+              <p className="mt-1 font-medium">
+                {new Set(orders.map((order) => order.status)).size || 0} 种状态
+              </p>
             </div>
             <div className="rounded-2xl border border-[color:var(--line)] bg-white px-4 py-3 text-sm">
               <p className="muted">拍摄日期</p>
@@ -116,7 +128,14 @@ export default async function OrdersPage({
         </div>
 
         <div className="mt-5">
-          <OrdersTable orders={orders} />
+          <OrdersTable
+            orders={orders}
+            emptyText={
+              user.role === "photographer"
+                ? "当前还没有分配给你的订单。客服或老板安排摄影师后，这里会自动出现。"
+                : "当前没有订单数据。"
+            }
+          />
         </div>
       </section>
     </AdminShell>

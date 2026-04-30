@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { AdminShell } from "@/components/admin-shell";
 import { createOrderAction } from "@/app/orders/new/actions";
+import { getOrderById } from "@/lib/order-store";
+import { getActiveStaffByRole } from "@/lib/staff";
 
 const fieldClassName =
   "mt-2 w-full rounded-2xl border border-[color:var(--line)] bg-white px-4 py-3 text-sm outline-none transition placeholder:text-[#93a09d] focus:border-[color:var(--accent)]";
@@ -8,9 +10,13 @@ const fieldClassName =
 export default async function NewOrderPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; photographer?: string; conflictOrderId?: string }>;
 }) {
   const params = await searchParams;
+  const photographerStaff = await getActiveStaffByRole("photographer");
+  const conflictOrder = params.conflictOrderId
+    ? await getOrderById(params.conflictOrderId)
+    : null;
 
   return (
     <AdminShell
@@ -38,6 +44,23 @@ export default async function NewOrderPage({
         {params.error === "missing" ? (
           <div className="mb-5 rounded-2xl border border-[#f0c8b2] bg-[#fff4ee] px-4 py-3 text-sm text-[#a3512d]">
             请先补全客户名称、联系人、学校、班级、拍摄日期和套餐类型这些必填项。
+          </div>
+        ) : null}
+        {params.error === "conflict" ? (
+          <div className="mb-5 rounded-2xl border border-[#f0d3a8] bg-[#fff7e8] px-4 py-3 text-sm text-[#8a5a14]">
+            {params.photographer || "该摄影师"} 在这个拍摄时间已经有安排了。
+            {conflictOrder ? (
+              <>
+                {" "}
+                冲突订单是
+                <Link href={`/orders/${conflictOrder.id}`} className="font-semibold underline underline-offset-2">
+                  {conflictOrder.customer}
+                </Link>
+                ，时间为 {conflictOrder.shootDate}。
+              </>
+            ) : (
+              " 请调整摄影师或拍摄时间后再保存。"
+            )}
           </div>
         ) : null}
 
@@ -132,11 +155,18 @@ export default async function NewOrderPage({
           </label>
           <label className="text-sm font-medium">
             摄影师安排
-            <input
+            <select
               name="photographer"
+              defaultValue=""
               className={fieldClassName}
-              placeholder="例如：阿峰 / 小林"
-            />
+            >
+              <option value="">暂未安排</option>
+              {photographerStaff.map((member) => (
+                <option key={member.id} value={member.name}>
+                  {member.name} · {member.title}
+                </option>
+              ))}
+            </select>
           </label>
           </div>
 

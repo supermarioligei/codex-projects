@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getSessionUser, roleLabels } from "@/lib/auth";
 import { loginAction } from "@/app/login/actions";
+import { getActiveStaffByRole, getActiveStaffMembers } from "@/lib/staff";
 
 const fieldClassName =
   "mt-2 w-full rounded-2xl border border-[color:var(--line)] bg-white px-4 py-3 text-sm outline-none transition placeholder:text-[#93a09d] focus:border-[color:var(--accent)]";
@@ -17,6 +18,15 @@ export default async function LoginPage({
   }
 
   const params = await searchParams;
+  const [staffMembers, photographerMembers, salesMembers, ownerMembers] = await Promise.all([
+    getActiveStaffMembers(),
+    getActiveStaffByRole("photographer"),
+    getActiveStaffByRole("sales"),
+    getActiveStaffByRole("owner"),
+  ]);
+  const photographerNames = photographerMembers.map((member) => member.name);
+  const salesNames = salesMembers.map((member) => member.name);
+  const ownerNames = ownerMembers.map((member) => member.name);
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-6xl items-center px-4 py-8 sm:px-6 lg:px-8">
@@ -72,6 +82,11 @@ export default async function LoginPage({
               请先填写姓名并选择身份。
             </div>
           ) : null}
+          {params.error === "invalid" ? (
+            <div className="mt-6 rounded-2xl border border-[#f0d3a8] bg-[#fff7e8] px-4 py-3 text-sm text-[#8a5a14]">
+              这个姓名和身份当前不在启用人员名单里，请联系老板检查人员管理。
+            </div>
+          ) : null}
 
           <form action={loginAction} className="mt-8 max-w-md">
             <label className="block text-sm font-medium">
@@ -79,10 +94,17 @@ export default async function LoginPage({
               <input
                 name="name"
                 required
+                list="staff-names"
                 className={fieldClassName}
                 placeholder="例如：张总 / 小林 / 阿峰"
               />
             </label>
+
+            <datalist id="staff-names">
+              {staffMembers.map((member) => (
+                <option key={member.id} value={member.name} />
+              ))}
+            </datalist>
 
             <label className="mt-5 block text-sm font-medium">
               登录身份
@@ -94,10 +116,10 @@ export default async function LoginPage({
             </label>
 
             <div className="mt-6 rounded-[1.5rem] border border-[color:var(--line)] bg-[#fffaf4] p-4 text-sm leading-6 muted">
-              演示建议：
-              老板可查看全部模块；
-              客服重点使用订单、提醒、交付和部分账务；
-              摄影师主要查看拍摄排期与自己需要执行的订单。
+              <p className="font-medium text-[#4e4a44]">演示账号建议</p>
+              <p className="mt-2">老板：{ownerNames.join(" / ")}</p>
+              <p className="mt-1">客服：{salesNames.join(" / ")}</p>
+              <p className="mt-1">摄影师：{photographerNames.join(" / ")}</p>
             </div>
 
             <button className="mt-6 rounded-full bg-[color:var(--accent)] px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-orange-200/70 transition hover:brightness-105">

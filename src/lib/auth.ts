@@ -1,7 +1,6 @@
-import "server-only";
-
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import type { OrderWithFinanceSummary } from "@/lib/order-store";
 
 export type UserRole = "owner" | "sales" | "photographer";
 
@@ -33,6 +32,50 @@ export function canEditFinance(role: UserRole) {
 
 export function canViewDelivery(role: UserRole) {
   return role === "owner" || role === "sales";
+}
+
+function normalizeName(value: string) {
+  return value.replace(/\s+/g, "").trim();
+}
+
+export function isOrderAssignedToPhotographer(
+  order: Pick<OrderWithFinanceSummary, "photographer">,
+  photographerName: string,
+) {
+  const current = normalizeName(photographerName);
+  const assigned = normalizeName(order.photographer ?? "");
+
+  if (!current || !assigned) {
+    return false;
+  }
+
+  const candidates = assigned
+    .split(/[\/,，、|]/)
+    .map((item) => normalizeName(item))
+    .filter(Boolean);
+
+  return candidates.some(
+    (item) => item === current || item.includes(current) || current.includes(item),
+  );
+}
+
+export function filterOrdersForUser(
+  orders: OrderWithFinanceSummary[],
+  user: SessionUser,
+) {
+  if (user.role !== "photographer") {
+    return orders;
+  }
+
+  return orders.filter((order) => isOrderAssignedToPhotographer(order, user.name));
+}
+
+export function canAccessOrder(order: OrderWithFinanceSummary, user: SessionUser) {
+  if (user.role !== "photographer") {
+    return true;
+  }
+
+  return isOrderAssignedToPhotographer(order, user.name);
 }
 
 export async function getSessionUser(): Promise<SessionUser | null> {

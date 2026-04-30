@@ -11,7 +11,8 @@
     "packageName": "毕业纪念全套",
     "amount": "¥8,600",
     "paid": "¥4,000",
-    "status": "待拍摄"
+    "status": "待拍摄",
+    "photographer": "阿峰"
   },
   {
     "id": "ORD-240428-02",
@@ -25,7 +26,8 @@
     "packageName": "班级合影 + 外景",
     "amount": "¥12,800",
     "paid": "¥12,800",
-    "status": "待选片"
+    "status": "待选片",
+    "photographer": "子瑜"
   },
   {
     "id": "ORD-240428-03",
@@ -39,7 +41,8 @@
     "packageName": "毕业典礼跟拍",
     "amount": "¥15,200",
     "paid": "¥6,000",
-    "status": "待拍摄"
+    "status": "待拍摄",
+    "photographer": "安安"
   },
   {
     "id": "ORD-240428-04",
@@ -53,6 +56,7 @@
     "packageName": "证件照 + 集体照",
     "amount": "¥4,200",
     "paid": "¥4,200",
-    "status": "待交付"
+    "status": "待交付",
+    "photographer": "阿峰"
   }
 ]

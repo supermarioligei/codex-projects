@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AdminShell } from "@/components/admin-shell";
-import { canEditFinance, canEditOrders, requireSession } from "@/lib/auth";
+import { canAccessOrder, canEditFinance, canEditOrders, requireSession } from "@/lib/auth";
 import { getFinanceEntriesByOrderId } from "@/lib/finance-store";
 import { getOrderById } from "@/lib/order-store";
 import { statusClassName } from "@/lib/ui";
@@ -22,7 +22,7 @@ export default async function OrderDetailPage({
   const query = await searchParams;
   const order = await getOrderById(id);
 
-  if (!order) {
+  if (!order || !canAccessOrder(order, user)) {
     notFound();
   }
 

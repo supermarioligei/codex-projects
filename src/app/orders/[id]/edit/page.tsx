@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { AdminShell } from "@/components/admin-shell";
 import { updateOrderAction } from "@/app/orders/[id]/edit/actions";
 import { getOrderById } from "@/lib/order-store";
+import { getActiveStaffByRole } from "@/lib/staff";
 
 const fieldClassName =
   "mt-2 w-full rounded-2xl border border-[color:var(--line)] bg-white px-4 py-3 text-sm outline-none transition placeholder:text-[#93a09d] focus:border-[color:var(--accent)]";
@@ -11,20 +12,36 @@ function toDatetimeLocalValue(value: string) {
   return value ? value.replace(" ", "T") : "";
 }
 
+function buildPhotographerOptions(currentValue: string, options: string[]) {
+
+  if (currentValue && !options.includes(currentValue)) {
+    return [currentValue, ...options];
+  }
+
+  return options;
+}
+
 export default async function EditOrderPage({
   params,
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; photographer?: string; conflictOrderId?: string }>;
 }) {
   const { id } = await params;
   const query = await searchParams;
   const order = await getOrderById(id);
+  const photographerStaff = await getActiveStaffByRole("photographer");
 
   if (!order) {
     notFound();
   }
+
+  const photographerOptions = buildPhotographerOptions(
+    order.photographer ?? "",
+    photographerStaff.map((member) => member.name),
+  );
+  const conflictOrder = query.conflictOrderId ? await getOrderById(query.conflictOrderId) : null;
 
   return (
     <AdminShell
@@ -52,6 +69,23 @@ export default async function EditOrderPage({
         {query.error === "missing" ? (
           <div className="mb-5 rounded-2xl border border-[#f0c8b2] bg-[#fff4ee] px-4 py-3 text-sm text-[#a3512d]">
             请先补全客户名称、联系人、学校、班级、拍摄日期和套餐类型这些必填项。
+          </div>
+        ) : null}
+        {query.error === "conflict" ? (
+          <div className="mb-5 rounded-2xl border border-[#f0d3a8] bg-[#fff7e8] px-4 py-3 text-sm text-[#8a5a14]">
+            {query.photographer || "该摄影师"} 在这个拍摄时间已经有安排了。
+            {conflictOrder ? (
+              <>
+                {" "}
+                冲突订单是
+                <Link href={`/orders/${conflictOrder.id}`} className="font-semibold underline underline-offset-2">
+                  {conflictOrder.customer}
+                </Link>
+                ，时间为 {conflictOrder.shootDate}。
+              </>
+            ) : (
+              " 请调整摄影师或拍摄时间后再保存。"
+            )}
           </div>
         ) : null}
 
@@ -161,11 +195,22 @@ export default async function EditOrderPage({
             </label>
             <label className="text-sm font-medium">
               摄影师安排
-              <input
+              <select
                 name="photographer"
                 defaultValue={order.photographer ?? ""}
                 className={fieldClassName}
-              />
+              >
+                <option value="">暂未安排</option>
+                {photographerOptions.map((name) => {
+                  const member = photographerStaff.find((item) => item.name === name);
+
+                  return (
+                    <option key={name} value={name}>
+                      {member ? `${member.name} · ${member.title}` : `${name} · 历史录入`}
+                    </option>
+                  );
+                })}
+              </select>
             </label>
           </div>
 

@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { updateOrder } from "@/lib/order-store";
+import { findPhotographerConflict, updateOrder } from "@/lib/order-store";
 import type { OrderStatus } from "@/lib/mock-data";
 
 function readText(formData: FormData, key: string) {
@@ -39,6 +39,18 @@ export async function updateOrderAction(formData: FormData) {
     !packageName
   ) {
     redirect(`/orders/${orderId}/edit?error=missing`);
+  }
+
+  const conflict = await findPhotographerConflict({
+    photographer,
+    shootDate,
+    excludeOrderId: orderId,
+  });
+
+  if (conflict) {
+    redirect(
+      `/orders/${orderId}/edit?error=conflict&photographer=${encodeURIComponent(photographer)}&conflictOrderId=${encodeURIComponent(conflict.id)}`,
+    );
   }
 
   const updated = await updateOrder(orderId, {
