@@ -24,3 +24,19 @@ npm run dev
 
 - `data/orders.json`
 - `data/finance.json`
+- `data/staff.json`
+
+生产环境建议通过 `STUDIO_DATA_DIR` 把真实数据放到代码目录之外。
+
+## Production Trial Deployment
+
+当前最适合的试用部署方式是：
+
+- `Node.js`
+- `PM2`
+- `Nginx`
+- 单台云服务器
+
+详细步骤见：
+
+- [DEPLOY.md](./DEPLOY.md)

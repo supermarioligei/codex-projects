@@ -7,8 +7,9 @@ import {
   type FinanceEntry,
   type FinanceEntryType,
 } from "@/lib/mock-data";
+import { getDataDirectory } from "@/lib/runtime-config";
 
-const dataDirectory = path.join(process.cwd(), "data");
+const dataDirectory = getDataDirectory();
 const financeFile = path.join(dataDirectory, "finance.json");
 
 export type CreateFinanceEntryInput = {

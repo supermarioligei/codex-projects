@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
-const publicPaths = ["/login"];
+const publicPaths = ["/login", "/healthz"];
 
 function hasRoleAccess(pathname: string, role: string | undefined) {
   if (!role) {

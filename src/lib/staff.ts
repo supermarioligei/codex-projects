@@ -3,6 +3,7 @@ import "server-only";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import type { UserRole } from "@/lib/auth";
+import { getDataDirectory } from "@/lib/runtime-config";
 
 export type StaffMember = {
   id: string;
@@ -13,7 +14,7 @@ export type StaffMember = {
   createdAt?: string;
 };
 
-const dataDirectory = path.join(process.cwd(), "data");
+const dataDirectory = getDataDirectory();
 const staffFile = path.join(dataDirectory, "staff.json");
 
 export const seedStaffMembers: StaffMember[] = [

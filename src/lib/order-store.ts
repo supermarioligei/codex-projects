@@ -4,8 +4,9 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { getFinanceEntries } from "@/lib/finance-store";
 import { seedOrders, type Order, type OrderStatus } from "@/lib/mock-data";
+import { getDataDirectory } from "@/lib/runtime-config";
 
-const dataDirectory = path.join(process.cwd(), "data");
+const dataDirectory = getDataDirectory();
 const ordersFile = path.join(dataDirectory, "orders.json");
 
 export type CreateOrderInput = {
