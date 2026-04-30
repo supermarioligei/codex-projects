@@ -17,7 +17,12 @@ function readAmount(formData: FormData, key: string) {
 }
 
 export async function updateOrderAction(formData: FormData) {
-  const user = await requireSession(["owner", "sales"]);
+  const user = await requireSession([
+    "owner",
+    "sales",
+    "production_manager",
+    "delivery_manager",
+  ]);
   const orderId = readText(formData, "orderId");
   const customer = readText(formData, "customer");
   const contact = readText(formData, "contact");
@@ -29,7 +34,13 @@ export async function updateOrderAction(formData: FormData) {
   const packageName = readText(formData, "packageName");
   const amount = readAmount(formData, "amount");
   const status = readText(formData, "status") as OrderStatus;
+  const salesOwner = readText(formData, "salesOwner");
+  const director = readText(formData, "director");
   const photographer = readText(formData, "photographer");
+  const assistantPhotographer = readText(formData, "assistantPhotographer");
+  const leadVideographer = readText(formData, "leadVideographer");
+  const assistantVideographer = readText(formData, "assistantVideographer");
+  const deliveryDueDate = readText(formData, "deliveryDueDate");
   const notes = readText(formData, "notes");
 
   if (
@@ -67,7 +78,13 @@ export async function updateOrderAction(formData: FormData) {
     packageName,
     amount,
     status,
+    salesOwner,
+    director,
     photographer,
+    assistantPhotographer,
+    leadVideographer,
+    assistantVideographer,
+    deliveryDueDate,
     notes,
   });
 

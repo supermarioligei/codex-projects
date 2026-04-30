@@ -1,11 +1,13 @@
 import Link from "next/link";
 import type { FinanceEntry } from "@/lib/mock-data";
+import type { OrderWithFinanceSummary } from "@/lib/order-store";
 
 type FinanceTableProps = {
   entries: FinanceEntry[];
+  ordersById?: Record<string, OrderWithFinanceSummary>;
 };
 
-export function FinanceTable({ entries }: FinanceTableProps) {
+export function FinanceTable({ entries, ordersById = {} }: FinanceTableProps) {
   return (
     <div className="overflow-hidden rounded-[1.5rem] border border-[color:var(--line)]">
       <div className="hidden grid-cols-[0.8fr_1.2fr_0.9fr_0.8fr_0.9fr] gap-3 bg-[#f6efe6] px-5 py-4 text-xs font-semibold uppercase tracking-[0.18em] text-[#6e7066] md:grid">
@@ -17,6 +19,10 @@ export function FinanceTable({ entries }: FinanceTableProps) {
       </div>
       <div className="divide-y divide-[color:var(--line)] bg-white/70">
         {entries.map((entry) => (
+          (() => {
+            const linkedOrder = entry.orderId ? ordersById[entry.orderId] : undefined;
+
+            return (
           <div
             key={entry.id}
             className="grid gap-3 px-5 py-4 md:grid-cols-[0.8fr_1.2fr_0.9fr_0.8fr_0.9fr] md:items-center"
@@ -44,6 +50,11 @@ export function FinanceTable({ entries }: FinanceTableProps) {
               <p className="mt-1 text-sm muted">
                 {entry.orderLabel ? `关联订单：${entry.orderLabel}` : "未关联订单"}
               </p>
+              {linkedOrder ? (
+                <p className="mt-1 text-sm muted">
+                  销售：{linkedOrder.salesOwner || "未指定"} · 主拍：{linkedOrder.photographer || "未安排"}
+                </p>
+              ) : null}
             </div>
             <div className="text-sm leading-6">
               <p>{entry.category || "未分类"}</p>
@@ -62,6 +73,8 @@ export function FinanceTable({ entries }: FinanceTableProps) {
             </div>
             <div className="text-sm muted">{entry.time}</div>
           </div>
+            );
+          })()
         ))}
       </div>
     </div>

@@ -1,28 +1,51 @@
 import Link from "next/link";
 import { AdminShell } from "@/components/admin-shell";
 import { DeliveryBoard } from "@/components/delivery-board";
+import { requireSession } from "@/lib/auth";
 import { buildDeliveryBuckets } from "@/lib/delivery";
 import { getOrders } from "@/lib/order-store";
 
 export default async function DeliveryPage() {
+  const user = await requireSession(["owner", "production_manager", "delivery_manager"]);
   const orders = await getOrders();
   const buckets = buildDeliveryBuckets(orders);
   const outstandingActive = buckets.active.reduce(
     (sum, order) => sum + order.outstandingAmount,
     0,
   );
+  const overdueCandidates = buckets.active.filter((order) => order.deliveryDueDate).length;
+  const overdueSoon = buckets.active.filter((order) => {
+    if (!order.deliveryDueDate) {
+      return false;
+    }
+
+    const due = new Date(`${order.deliveryDueDate}T23:59:59`);
+    const now = new Date();
+    const inThreeDays = new Date(now);
+    inThreeDays.setDate(inThreeDays.getDate() + 3);
+
+    return due <= inThreeDays;
+  }).length;
+  const deliveryTitle =
+    user.role === "delivery_manager" ? "交付执行中心" : "交付中心";
+  const deliveryDescription =
+    user.role === "delivery_manager"
+      ? "优先盯导演、拍摄执行与合同交付日期的衔接，避免照片产出和交付超期。"
+      : "把待选片、待交付和已完成订单集中管理，避免交付节点和尾款节点脱节。";
+  const deliveryAdvice =
+    user.role === "delivery_manager"
+      ? "先处理合同交付日期临近、但拍摄或选片仍未完全衔接的订单，再去处理尾款未收的交付单。"
+      : "先处理待交付但仍未收齐尾款的订单，再推进待选片订单，能减少交片后催款的被动。";
 
   return (
     <AdminShell
       activeHref="/delivery"
-      title="交付中心"
-      description="把待选片、待交付和已完成订单集中管理，避免交付节点和尾款节点脱节。"
+      title={deliveryTitle}
+      description={deliveryDescription}
       aside={
         <>
           <p className="text-sm font-semibold">交付建议</p>
-          <p className="mt-2 text-sm leading-6 muted">
-            先处理待交付但仍未收齐尾款的订单，再推进待选片订单，能减少交片后催款的被动。
-          </p>
+          <p className="mt-2 text-sm leading-6 muted">{deliveryAdvice}</p>
         </>
       }
     >
@@ -30,7 +53,9 @@ export default async function DeliveryPage() {
         <p className="text-sm uppercase tracking-[0.24em] text-white/74">Delivery</p>
         <h2 className="mt-3 text-2xl font-semibold sm:text-3xl">交付任务总览</h2>
         <p className="mt-3 max-w-2xl text-sm leading-7 text-white/82">
-          交付中心把后半段流程拉直了：待选片、待交付和已完成会统一展示，方便你盯住交片与回款。
+          {user.role === "delivery_manager"
+            ? "这一页会优先把导演、拍摄团队、合同交付日期和产出风险放到一起看。"
+            : "交付中心把后半段流程拉直了：待选片、待交付和已完成会统一展示，方便你盯住交片与回款。"}
         </p>
       </div>
 
@@ -46,11 +71,19 @@ export default async function DeliveryPage() {
           <p className="mt-3 text-sm leading-6 muted">适合优先核对尾款、修图和云相册链接</p>
         </article>
         <article className="soft-card rounded-[1.5rem] p-5">
-          <p className="text-sm muted">交付中待收</p>
+          <p className="text-sm muted">
+            {user.role === "delivery_manager" ? "临近交付日期" : "交付中待收"}
+          </p>
           <h3 className="mt-4 text-3xl font-semibold">
-            ¥{outstandingActive.toLocaleString("zh-CN")}
+            {user.role === "delivery_manager"
+              ? `${overdueSoon} 单`
+              : `¥${outstandingActive.toLocaleString("zh-CN")}`}
           </h3>
-          <p className="mt-3 text-sm leading-6 muted">待选片与待交付订单里尚未收回的金额</p>
+          <p className="mt-3 text-sm leading-6 muted">
+            {user.role === "delivery_manager"
+              ? `${overdueCandidates} 单已填写合同交付日期，建议优先盯近 3 天节点`
+              : "待选片与待交付订单里尚未收回的金额"}
+          </p>
         </article>
         <article className="soft-card rounded-[1.5rem] p-5">
           <p className="text-sm muted">已完成</p>

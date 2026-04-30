@@ -29,6 +29,12 @@ export type Order = {
   paid: string;
   status: OrderStatus;
   photographer?: string;
+  salesOwner?: string;
+  director?: string;
+  assistantPhotographer?: string;
+  leadVideographer?: string;
+  assistantVideographer?: string;
+  deliveryDueDate?: string;
 };
 
 export const dashboardStats = [
@@ -73,6 +79,12 @@ export const orders: Order[] = [
     paid: "¥4,000",
     status: "待拍摄" as OrderStatus,
     photographer: "阿峰",
+    salesOwner: "小林",
+    director: "浩然",
+    assistantPhotographer: "安安",
+    leadVideographer: "子瑜",
+    assistantVideographer: "",
+    deliveryDueDate: "2026-05-12",
   },
   {
     id: "ORD-240428-02",
@@ -88,6 +100,12 @@ export const orders: Order[] = [
     paid: "¥12,800",
     status: "待选片" as OrderStatus,
     photographer: "子瑜",
+    salesOwner: "小禾",
+    director: "浩然",
+    assistantPhotographer: "阿峰",
+    leadVideographer: "安安",
+    assistantVideographer: "",
+    deliveryDueDate: "2026-05-15",
   },
   {
     id: "ORD-240428-03",
@@ -103,6 +121,12 @@ export const orders: Order[] = [
     paid: "¥6,000",
     status: "待拍摄" as OrderStatus,
     photographer: "安安",
+    salesOwner: "小林",
+    director: "周策",
+    assistantPhotographer: "子瑜",
+    leadVideographer: "阿峰",
+    assistantVideographer: "",
+    deliveryDueDate: "2026-05-18",
   },
   {
     id: "ORD-240428-04",
@@ -118,6 +142,12 @@ export const orders: Order[] = [
     paid: "¥4,200",
     status: "待交付" as OrderStatus,
     photographer: "阿峰",
+    salesOwner: "小禾",
+    director: "周策",
+    assistantPhotographer: "",
+    leadVideographer: "子瑜",
+    assistantVideographer: "安安",
+    deliveryDueDate: "2026-05-02",
   },
 ];
 

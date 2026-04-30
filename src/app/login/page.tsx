@@ -21,10 +21,20 @@ export default async function LoginPage({
   }
 
   const params = await searchParams;
-  const [photographerMembers, salesMembers, ownerMembers] = await Promise.all([
+  const [
+    photographerMembers,
+    salesMembers,
+    ownerMembers,
+    productionMembers,
+    financeMembers,
+    deliveryMembers,
+  ] = await Promise.all([
     getActiveStaffByRole("photographer"),
     getActiveStaffByRole("sales"),
     getActiveStaffByRole("owner"),
+    getActiveStaffByRole("production_manager"),
+    getActiveStaffByRole("finance_director"),
+    getActiveStaffByRole("delivery_manager"),
   ]);
 
   return (
@@ -49,13 +59,28 @@ export default async function LoginPage({
                 },
                 {
                   role: "sales",
-                  title: "客服视角",
-                  detail: "订单推进、尾款跟进、交付协同",
+                  title: "销售视角",
+                  detail: "建单推进、客户跟进、重点提醒",
+                },
+                {
+                  role: "production_manager",
+                  title: "拍摄主管视角",
+                  detail: "排期统筹、导演与主辅拍安排、执行跟踪",
+                },
+                {
+                  role: "finance_director",
+                  title: "财务总监视角",
+                  detail: "全部流水、订单归属与整体财务概览",
+                },
+                {
+                  role: "delivery_manager",
+                  title: "交付主管视角",
+                  detail: "交付推进、产出跟踪、超期风险控制",
                 },
                 {
                   role: "photographer",
-                  title: "摄影师视角",
-                  detail: "今日拍摄、本周排期、执行提醒",
+                  title: "拍摄执行视角",
+                  detail: "自己参与的拍摄任务、排期和提醒",
                 },
               ] as const
             ).map((item) => (
@@ -114,7 +139,16 @@ export default async function LoginPage({
               <p className="mt-2">老板：{ownerMembers.map((member) => member.username).join(" / ")}</p>
               <p className="mt-1">客服：{salesMembers.map((member) => member.username).join(" / ")}</p>
               <p className="mt-1">
-                摄影师：{photographerMembers.map((member) => member.username).join(" / ")}
+                拍摄主管：{productionMembers.map((member) => member.username).join(" / ")}
+              </p>
+              <p className="mt-1">
+                财务总监：{financeMembers.map((member) => member.username).join(" / ")}
+              </p>
+              <p className="mt-1">
+                交付主管：{deliveryMembers.map((member) => member.username).join(" / ")}
+              </p>
+              <p className="mt-1">
+                拍摄执行：{photographerMembers.map((member) => member.username).join(" / ")}
               </p>
               <p className="mt-3">默认初始密码：{DEFAULT_TEMP_PASSWORD}</p>
               <p className="mt-1">建议老板登录后，尽快在人员管理里为每个人重置独立密码。</p>

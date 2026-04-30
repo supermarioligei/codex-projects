@@ -21,7 +21,13 @@ export type CreateOrderInput = {
   amount: number;
   paid: number;
   status: OrderStatus;
+  salesOwner: string;
+  director: string;
   photographer: string;
+  assistantPhotographer: string;
+  leadVideographer: string;
+  assistantVideographer: string;
+  deliveryDueDate: string;
   notes: string;
 };
 
@@ -36,12 +42,17 @@ export type UpdateOrderInput = {
   packageName: string;
   amount: number;
   status: OrderStatus;
+  salesOwner: string;
+  director: string;
   photographer: string;
+  assistantPhotographer: string;
+  leadVideographer: string;
+  assistantVideographer: string;
+  deliveryDueDate: string;
   notes: string;
 };
 
 type StoredOrder = Order & {
-  photographer?: string;
   notes?: string;
   createdAt?: string;
 };
@@ -113,7 +124,13 @@ export async function createOrder(input: CreateOrderInput) {
     amount: formatCurrency(input.amount),
     paid: formatCurrency(input.paid),
     status: input.status,
+    salesOwner: input.salesOwner,
+    director: input.director,
     photographer: input.photographer,
+    assistantPhotographer: input.assistantPhotographer,
+    leadVideographer: input.leadVideographer,
+    assistantVideographer: input.assistantVideographer,
+    deliveryDueDate: input.deliveryDueDate,
     notes: input.notes,
     createdAt: new Date().toISOString(),
   };
@@ -150,7 +167,13 @@ export async function updateOrder(orderId: string, input: UpdateOrderInput) {
             packageName: input.packageName,
             amount: formatCurrency(input.amount),
             status: input.status,
+            salesOwner: input.salesOwner,
+            director: input.director,
             photographer: input.photographer,
+            assistantPhotographer: input.assistantPhotographer,
+            leadVideographer: input.leadVideographer,
+            assistantVideographer: input.assistantVideographer,
+            deliveryDueDate: input.deliveryDueDate,
             notes: input.notes,
           }
         : order,

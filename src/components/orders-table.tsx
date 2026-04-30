@@ -42,6 +42,9 @@ export function OrdersTable({
               <p className="mt-1 text-sm muted">
                 {order.contact} · {order.id}
               </p>
+              <p className="mt-1 text-sm muted">
+                销售：{order.salesOwner || "未指定"} · 导演：{order.director || "未安排"}
+              </p>
             </div>
             <div className="text-sm leading-6">
               <p>{order.shootDate}</p>
@@ -50,6 +53,7 @@ export function OrdersTable({
             <div className="text-sm leading-6">
               <p>{order.packageName}</p>
               <p className="muted">{order.location}</p>
+              <p className="muted">主拍：{order.photographer || "未安排"}</p>
             </div>
             <div className="text-sm leading-6">
               <p className="font-semibold">{order.amount}</p>

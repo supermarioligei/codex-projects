@@ -30,7 +30,13 @@ export async function createOrderAction(formData: FormData) {
   const amount = readAmount(formData, "amount");
   const paid = readAmount(formData, "paid");
   const status = readText(formData, "status") as OrderStatus;
+  const salesOwner = readText(formData, "salesOwner");
+  const director = readText(formData, "director");
   const photographer = readText(formData, "photographer");
+  const assistantPhotographer = readText(formData, "assistantPhotographer");
+  const leadVideographer = readText(formData, "leadVideographer");
+  const assistantVideographer = readText(formData, "assistantVideographer");
+  const deliveryDueDate = readText(formData, "deliveryDueDate");
   const notes = readText(formData, "notes");
 
   if (
@@ -67,7 +73,13 @@ export async function createOrderAction(formData: FormData) {
     amount,
     paid,
     status,
+    salesOwner,
+    director,
     photographer,
+    assistantPhotographer,
+    leadVideographer,
+    assistantVideographer,
+    deliveryDueDate,
     notes,
   });
 

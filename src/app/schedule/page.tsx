@@ -12,24 +12,62 @@ export default async function SchedulePage() {
     (sum, order) => sum + order.receivedTotal,
     0,
   );
+  const unassignedDirectorCount = buckets.thisWeek.filter((order) => !order.director?.trim()).length;
+  const unassignedCrewCount = buckets.thisWeek.filter(
+    (order) => !order.photographer?.trim() || !order.leadVideographer?.trim(),
+  ).length;
+  const scheduleTitle =
+    user.role === "photographer"
+      ? "我的拍摄排期"
+      : user.role === "production_manager"
+        ? "拍摄执行排期"
+        : user.role === "delivery_manager"
+          ? "拍摄与交付衔接排期"
+          : "拍摄排期";
+  const scheduleDescription =
+    user.role === "photographer"
+      ? "只显示分配给你的拍摄任务，方便你专注看今天、明天和本周要执行的场次。"
+      : user.role === "production_manager"
+        ? "优先看导演、主辅拍和主辅拍摄像的安排是否齐全，尽快补齐执行团队。"
+        : user.role === "delivery_manager"
+          ? "重点看拍摄日期、导演和合同交付日期，提前判断哪些订单会影响后续交付。"
+          : "按今日、明日和本周视角查看即将执行的拍摄任务，提前发现人员和回款风险。";
+  const scheduleAdvice =
+    user.role === "photographer"
+      ? "先确认自己本周的场次、出发时间和联系人，再把明天要拍的细节提前对齐。"
+      : user.role === "production_manager"
+        ? "先补齐导演和主辅拍，再处理临近开拍但执行团队还不完整的订单。"
+        : user.role === "delivery_manager"
+          ? "先关注合同交付日期临近、但拍摄或选片还没顺利接上的订单。"
+          : "先补齐本周未分配摄影师的场次，再对待收尾款较高的订单提前确认拍摄与交付节奏。";
+  const overviewLabel =
+    user.role === "production_manager"
+      ? "待补执行团队"
+      : user.role === "delivery_manager"
+        ? "临近交付观察"
+        : "待安排摄影师";
+  const overviewValue =
+    user.role === "production_manager"
+      ? `${unassignedCrewCount} 场`
+      : user.role === "delivery_manager"
+        ? `${buckets.thisWeek.filter((order) => order.deliveryDueDate).length} 单`
+        : `${buckets.unassigned.length} 场`;
+  const overviewDetail =
+    user.role === "production_manager"
+      ? `${unassignedDirectorCount} 场导演待补 · ${unassignedCrewCount} 场主拍或摄像待补`
+      : user.role === "delivery_manager"
+        ? `本周关联实收 ¥${thisWeekRevenue.toLocaleString("zh-CN")}`
+        : `本周关联实收 ¥${thisWeekRevenue.toLocaleString("zh-CN")}`;
 
   return (
     <AdminShell
       activeHref="/schedule"
-      title={user.role === "photographer" ? "我的拍摄排期" : "拍摄排期"}
-      description={
-        user.role === "photographer"
-          ? "只显示分配给你的拍摄任务，方便你专注看今天、明天和本周要执行的场次。"
-          : "按今日、明日和本周视角查看即将执行的拍摄任务，提前发现人员和回款风险。"
-      }
+      title={scheduleTitle}
+      description={scheduleDescription}
       aside={
         <>
           <p className="text-sm font-semibold">排期建议</p>
-          <p className="mt-2 text-sm leading-6 muted">
-            {user.role === "photographer"
-              ? "先确认自己本周的场次、出发时间和联系人，再把明天要拍的细节提前对齐。"
-              : "先补齐本周未分配摄影师的场次，再对待收尾款较高的订单提前确认拍摄与交付节奏。"}
-          </p>
+          <p className="mt-2 text-sm leading-6 muted">{scheduleAdvice}</p>
         </>
       }
     >
@@ -60,11 +98,9 @@ export default async function SchedulePage() {
           <p className="mt-3 text-sm leading-6 muted">未来 7 天内的全部拍摄任务</p>
         </article>
         <article className="soft-card rounded-[1.5rem] p-5">
-          <p className="text-sm muted">待安排摄影师</p>
-          <h3 className="mt-4 text-3xl font-semibold">{buckets.unassigned.length} 场</h3>
-          <p className="mt-3 text-sm leading-6 muted">
-            本周关联实收 ¥{thisWeekRevenue.toLocaleString("zh-CN")}
-          </p>
+          <p className="text-sm muted">{overviewLabel}</p>
+          <h3 className="mt-4 text-3xl font-semibold">{overviewValue}</h3>
+          <p className="mt-3 text-sm leading-6 muted">{overviewDetail}</p>
         </article>
       </section>
 
@@ -73,7 +109,13 @@ export default async function SchedulePage() {
           <div className="flex items-center justify-between gap-3">
             <div>
               <p className="text-sm font-semibold">本周拍摄清单</p>
-              <p className="mt-1 text-sm muted">按时间升序展示未来 7 天的场次</p>
+              <p className="mt-1 text-sm muted">
+                {user.role === "production_manager"
+                  ? "按时间升序检查导演、主拍摄影和主拍摄像安排"
+                  : user.role === "delivery_manager"
+                    ? "按时间升序查看拍摄执行是否会影响后续交付"
+                    : "按时间升序展示未来 7 天的场次"}
+              </p>
             </div>
             <span className="rounded-full bg-[color:var(--accent-soft)] px-3 py-1 text-xs font-semibold metric-accent">
               {buckets.thisWeek.length} 场待执行
@@ -89,25 +131,43 @@ export default async function SchedulePage() {
           <section className="soft-card rounded-[1.75rem] p-5">
             <div>
               <p className="text-sm font-semibold">今日提醒</p>
-              <p className="mt-1 text-sm muted">适合在早会或出发前快速检查</p>
+              <p className="mt-1 text-sm muted">
+                {user.role === "production_manager"
+                  ? "适合拍摄主管在排班前快速检查"
+                  : user.role === "delivery_manager"
+                    ? "适合交付主管判断拍摄进度是否会连带影响后续交付"
+                    : "适合在早会或出发前快速检查"}
+              </p>
             </div>
             <div className="mt-5 space-y-3">
               <article className="rounded-[1.4rem] border border-[color:var(--line)] bg-white/85 p-4">
-                <p className="text-sm font-semibold">确认器材</p>
+                <p className="text-sm font-semibold">
+                  {user.role === "production_manager" ? "确认导演与主辅拍" : "确认器材"}
+                </p>
                 <p className="mt-2 text-sm leading-6 muted">
-                  检查机身、电池、存储卡、灯光、反光板和班级号牌是否齐全。
+                  {user.role === "production_manager"
+                    ? "检查导演、主拍摄影、辅拍摄影、主拍摄像、辅拍摄像是否已明确到人。"
+                    : "检查机身、电池、存储卡、灯光、反光板和班级号牌是否齐全。"}
                 </p>
               </article>
               <article className="rounded-[1.4rem] border border-[color:var(--line)] bg-white/85 p-4">
-                <p className="text-sm font-semibold">确认联系人</p>
+                <p className="text-sm font-semibold">
+                  {user.role === "delivery_manager" ? "确认合同交付日期" : "确认联系人"}
+                </p>
                 <p className="mt-2 text-sm leading-6 muted">
-                  提前 1 小时联系老师，确认班级集合时间、天气预案和场地开放情况。
+                  {user.role === "delivery_manager"
+                    ? "把本周拍摄订单的合同交付日期和拍摄日期对照起来，优先识别时间最紧的订单。"
+                    : "提前 1 小时联系老师，确认班级集合时间、天气预案和场地开放情况。"}
                 </p>
               </article>
               <article className="rounded-[1.4rem] border border-[color:var(--line)] bg-white/85 p-4">
-                <p className="text-sm font-semibold">确认回款节点</p>
+                <p className="text-sm font-semibold">
+                  {user.role === "delivery_manager" ? "确认产出衔接风险" : "确认回款节点"}
+                </p>
                 <p className="mt-2 text-sm leading-6 muted">
-                  对待收金额较高的场次，在拍摄前再次确认尾款节点和交付条件。
+                  {user.role === "delivery_manager"
+                    ? "对待选片、待交付订单提前追踪导演与执行团队，避免超出合同约定日期。"
+                    : "对待收金额较高的场次，在拍摄前再次确认尾款节点和交付条件。"}
                 </p>
               </article>
             </div>

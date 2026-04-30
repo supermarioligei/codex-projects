@@ -68,7 +68,9 @@ export function generateReminders(
       reminders.push({
         id: `shoot-${order.id}`,
         title: `${isTomorrow ? "明天拍摄" : "今天拍摄"}：${order.customer}`,
-        detail: `${order.shootDate} · ${order.location || "地点待补充"} · ${
+        detail: `${order.shootDate} · ${order.location || "地点待补充"} · 导演 ${
+          order.director || "待安排"
+        } · 主拍 ${
           order.photographer || "待安排摄影师"
         }`,
         level: "高优先级",
@@ -78,11 +80,11 @@ export function generateReminders(
       });
     }
 
-    if (order.status === "待拍摄" && !order.photographer?.trim()) {
+    if (order.status === "待拍摄" && (!order.photographer?.trim() || !order.director?.trim())) {
       reminders.push({
         id: `crew-${order.id}`,
-        title: `待安排摄影师：${order.customer}`,
-        detail: `${order.shootDate} 开拍，当前尚未分配摄影师，请尽快确认人员和出行安排。`,
+        title: `待补执行安排：${order.customer}`,
+        detail: `${order.shootDate} 开拍，当前导演或主拍摄影还未安排，请尽快确认执行团队。`,
         level: "中优先级",
         category: "拍摄提醒",
         href: `/orders/${order.id}/edit`,
@@ -115,6 +117,22 @@ export function generateReminders(
         level: "中优先级",
         category: "交付提醒",
         href: `/finance/new`,
+        orderId: order.id,
+      });
+    }
+
+    if (
+      order.deliveryDueDate &&
+      (order.status === "待选片" || order.status === "待交付") &&
+      toDate(`${order.deliveryDueDate} 23:59`) <= endOfDay(addDays(now, 2))
+    ) {
+      reminders.push({
+        id: `due-${order.id}`,
+        title: `临近交付截止：${order.customer}`,
+        detail: `合同交付日期 ${order.deliveryDueDate}，请尽快确认拍摄产出、选片和交付进度。`,
+        level: "高优先级",
+        category: "交付提醒",
+        href: `/delivery`,
         orderId: order.id,
       });
     }

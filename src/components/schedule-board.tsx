@@ -30,6 +30,9 @@ export function ScheduleBoard({ orders }: ScheduleBoardProps) {
                 <p className="mt-1 text-sm muted">
                   {order.school} · {order.campus} · {order.className}
                 </p>
+                <p className="mt-1 text-sm muted">
+                  销售：{order.salesOwner || "未指定"} · 导演：{order.director || "未安排"}
+                </p>
               </div>
               <span className={statusClassName[order.status]}>{order.status}</span>
             </div>
@@ -47,11 +50,13 @@ export function ScheduleBoard({ orders }: ScheduleBoardProps) {
               <div className="rounded-2xl border border-[color:var(--line)] bg-[#fffdf9] px-3 py-3">
                 <p className="text-xs uppercase tracking-[0.16em] muted">人员 / 回款</p>
                 <p className="mt-2 text-sm font-semibold">
-                  {order.photographer || "待安排摄影师"}
+                  主拍 {order.photographer || "待安排"} / 摄像 {order.leadVideographer || "待安排"}
                 </p>
                 <p className="mt-1 text-sm muted">
-                  已收 {order.paid} · 待收 ¥
-                  {order.outstandingAmount.toLocaleString("zh-CN")}
+                  辅拍 {order.assistantPhotographer || "待安排"} / 辅摄 {order.assistantVideographer || "待安排"}
+                </p>
+                <p className="mt-1 text-sm muted">
+                  已收 {order.paid} · 待收 ¥{order.outstandingAmount.toLocaleString("zh-CN")}
                 </p>
               </div>
             </div>

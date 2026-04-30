@@ -1,10 +1,16 @@
 import Link from "next/link";
 import { AdminShell } from "@/components/admin-shell";
 import { FinanceTable } from "@/components/finance-table";
+import { requireSession } from "@/lib/auth";
 import { getFinanceEntries } from "@/lib/finance-store";
+import { getOrders } from "@/lib/order-store";
 
 function parseAmount(value: string) {
   return Number(value.replace(/[^\d.-]/g, "")) || 0;
+}
+
+function toDate(value: string) {
+  return new Date(value.replace(" ", "T"));
 }
 
 export default async function FinancePage({
@@ -12,8 +18,17 @@ export default async function FinancePage({
 }: {
   searchParams: Promise<{ created?: string; updated?: string }>;
 }) {
-  const entries = await getFinanceEntries();
+  await requireSession(["owner", "finance_director"]);
+  const [entries, orders] = await Promise.all([getFinanceEntries(), getOrders()]);
   const params = await searchParams;
+  const ordersById = Object.fromEntries(orders.map((order) => [order.id, order]));
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+  const yearStart = new Date(now.getFullYear(), 0, 1);
+  const yearEnd = new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999);
   const income = entries
     .filter((entry) => entry.type === "收款")
     .reduce((sum, entry) => sum + parseAmount(entry.amount), 0);
@@ -21,26 +36,73 @@ export default async function FinancePage({
     .filter((entry) => entry.type !== "收款")
     .reduce((sum, entry) => sum + parseAmount(entry.amount), 0);
   const linkedCount = entries.filter((entry) => entry.orderId).length;
+  const todayIncome = entries
+    .filter((entry) => {
+      if (entry.type !== "收款") {
+        return false;
+      }
+
+      const entryAt = toDate(entry.time);
+      return entryAt >= todayStart && entryAt <= todayEnd;
+    })
+    .reduce((sum, entry) => sum + parseAmount(entry.amount), 0);
+  const monthIncome = entries
+    .filter((entry) => {
+      if (entry.type !== "收款") {
+        return false;
+      }
+
+      const entryAt = toDate(entry.time);
+      return entryAt >= monthStart && entryAt <= monthEnd;
+    })
+    .reduce((sum, entry) => sum + parseAmount(entry.amount), 0);
+  const yearIncome = entries
+    .filter((entry) => {
+      if (entry.type !== "收款") {
+        return false;
+      }
+
+      const entryAt = toDate(entry.time);
+      return entryAt >= yearStart && entryAt <= yearEnd;
+    })
+    .reduce((sum, entry) => sum + parseAmount(entry.amount), 0);
+  const yearExpense = entries
+    .filter((entry) => {
+      if (entry.type === "收款") {
+        return false;
+      }
+
+      const entryAt = toDate(entry.time);
+      return entryAt >= yearStart && entryAt <= yearEnd;
+    })
+    .reduce((sum, entry) => sum + parseAmount(entry.amount), 0);
+  const outstandingAmount = orders.reduce((sum, order) => sum + order.outstandingAmount, 0);
+  const attributedOrders = orders.filter((order) => order.salesOwner || order.photographer).length;
   const summaryCards = [
     {
-      label: "累计收款",
-      value: `¥${income.toLocaleString("zh-CN")}`,
-      detail: "用于跟踪订单回款节奏",
+      label: "当日收款",
+      value: `¥${todayIncome.toLocaleString("zh-CN")}`,
+      detail: "今天已登记的全部收款",
     },
     {
-      label: "累计支出退款",
-      value: `¥${expense.toLocaleString("zh-CN")}`,
-      detail: "包含成本支出与售后退款",
+      label: "本月收款",
+      value: `¥${monthIncome.toLocaleString("zh-CN")}`,
+      detail: "用于跟踪当月回款节奏",
     },
     {
-      label: "净流入",
-      value: `¥${(income - expense).toLocaleString("zh-CN")}`,
-      detail: "收款减去支出退款后的结果",
+      label: "全年净流入",
+      value: `¥${(yearIncome - yearExpense).toLocaleString("zh-CN")}`,
+      detail: "本年收款减去退款和支出",
     },
     {
-      label: "已关联合同",
-      value: `${linkedCount} 条`,
-      detail: "后续可继续扩展为订单账务明细",
+      label: "订单待收总额",
+      value: `¥${outstandingAmount.toLocaleString("zh-CN")}`,
+      detail: "方便财务总监优先盯大额未回款订单",
+    },
+    {
+      label: "归属已补订单",
+      value: `${attributedOrders} 单`,
+      detail: `${linkedCount} 条流水已关联订单，可继续扩展为利润分析`,
     },
   ];
 
@@ -48,7 +110,7 @@ export default async function FinancePage({
     <AdminShell
       activeHref="/finance"
       title="账务流水"
-      description="记录每一笔收款、退款和支出，并逐步建立与订单的财务关联。"
+      description="记录每一笔收款、退款和支出，并核对每一笔订单归属的销售和拍摄执行团队。"
       aside={
         <>
           <p className="text-sm font-semibold">财务建议</p>
@@ -76,7 +138,7 @@ export default async function FinancePage({
             流水总览与核对
           </h2>
           <p className="mt-3 max-w-2xl text-sm leading-7 muted">
-            这一页后面可以继续加时间筛选、按订单汇总、摄影师成本分摊和月度利润统计。
+            财务总监在这里既能看今天、本月、本年的财务情况，也能核对每笔流水对应的销售和执行归属。
           </p>
         </div>
         <Link
@@ -87,7 +149,7 @@ export default async function FinancePage({
         </Link>
       </div>
 
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
         {summaryCards.map((card) => (
           <article key={card.label} className="soft-card rounded-[1.5rem] p-5">
             <p className="text-sm muted">{card.label}</p>
@@ -102,7 +164,7 @@ export default async function FinancePage({
           <div>
             <p className="text-sm font-semibold">全部流水</p>
             <p className="mt-1 text-sm muted">
-              已支持和订单关联。下一步我们可以继续做按订单自动汇总实收与未收。
+              现在已经支持关联订单归属。财务总监可以在这里核对销售归属和主拍执行归属。
             </p>
           </div>
           <div className="grid gap-3 sm:grid-cols-3">
@@ -117,14 +179,14 @@ export default async function FinancePage({
               </p>
             </div>
             <div className="rounded-2xl border border-[color:var(--line)] bg-white px-4 py-3 text-sm">
-              <p className="muted">已关联订单</p>
-              <p className="mt-1 font-medium">{linkedCount} 条</p>
+              <p className="muted">总流水规模</p>
+              <p className="mt-1 font-medium">¥{(income - expense).toLocaleString("zh-CN")} 净流入</p>
             </div>
           </div>
         </div>
 
         <div className="mt-5">
-          <FinanceTable entries={entries} />
+          <FinanceTable entries={entries} ordersById={ordersById} />
         </div>
       </section>
     </AdminShell>

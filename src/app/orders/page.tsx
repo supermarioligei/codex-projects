@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { AdminShell } from "@/components/admin-shell";
 import { OrdersTable } from "@/components/orders-table";
-import { canEditOrders, filterOrdersForUser, requireSession } from "@/lib/auth";
+import { canCreateOrders, filterOrdersForUser, requireSession } from "@/lib/auth";
 import { getOrders } from "@/lib/order-store";
 import type { OrderStatus } from "@/lib/mock-data";
 
@@ -23,6 +23,11 @@ function matchesSearch(order: Awaited<ReturnType<typeof getOrders>>[number], key
     order.contact,
     order.campus,
     order.packageName,
+    order.salesOwner ?? "",
+    order.director ?? "",
+    order.assistantPhotographer ?? "",
+    order.leadVideographer ?? "",
+    order.assistantVideographer ?? "",
     order.photographer ?? "",
   ]
     .join(" ")
@@ -128,7 +133,7 @@ export default async function OrdersPage({
               : "这一页会成为业务主操作页，后面我们可以继续加筛选、搜索、状态编辑和订单详情抽屉。"}
           </p>
         </div>
-        {canEditOrders(user.role) ? (
+        {canCreateOrders(user.role) ? (
           <Link
             href="/orders/new"
             className="inline-flex items-center justify-center rounded-full bg-[color:var(--accent)] px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-orange-200/70 transition hover:brightness-105"

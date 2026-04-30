@@ -13,7 +13,11 @@ export default async function NewOrderPage({
   searchParams: Promise<{ error?: string; photographer?: string; conflictOrderId?: string }>;
 }) {
   const params = await searchParams;
-  const photographerStaff = await getActiveStaffByRole("photographer");
+  const [salesStaff, productionManagers, crewStaff] = await Promise.all([
+    getActiveStaffByRole("sales"),
+    getActiveStaffByRole("production_manager"),
+    getActiveStaffByRole("photographer"),
+  ]);
   const conflictOrder = params.conflictOrderId
     ? await getOrderById(params.conflictOrderId)
     : null;
@@ -154,19 +158,74 @@ export default async function NewOrderPage({
             </select>
           </label>
           <label className="text-sm font-medium">
-            摄影师安排
-            <select
-              name="photographer"
-              defaultValue=""
-              className={fieldClassName}
-            >
-              <option value="">暂未安排</option>
-              {photographerStaff.map((member) => (
+            归属销售
+            <select name="salesOwner" defaultValue="" className={fieldClassName}>
+              <option value="">暂未指定</option>
+              {salesStaff.map((member) => (
                 <option key={member.id} value={member.name}>
                   {member.name} · {member.title}
                 </option>
               ))}
             </select>
+          </label>
+          <label className="text-sm font-medium">
+            导演 / 执行统筹
+            <select name="director" defaultValue="" className={fieldClassName}>
+              <option value="">暂未安排</option>
+              {productionManagers.map((member) => (
+                <option key={member.id} value={member.name}>
+                  {member.name} · {member.title}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="text-sm font-medium">
+            主拍摄影师
+            <select name="photographer" defaultValue="" className={fieldClassName}>
+              <option value="">暂未安排</option>
+              {crewStaff.map((member) => (
+                <option key={member.id} value={member.name}>
+                  {member.name} · {member.title}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="text-sm font-medium">
+            辅拍摄影师
+            <select name="assistantPhotographer" defaultValue="" className={fieldClassName}>
+              <option value="">暂未安排</option>
+              {crewStaff.map((member) => (
+                <option key={member.id} value={member.name}>
+                  {member.name} · {member.title}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="text-sm font-medium">
+            主拍摄像师
+            <select name="leadVideographer" defaultValue="" className={fieldClassName}>
+              <option value="">暂未安排</option>
+              {crewStaff.map((member) => (
+                <option key={member.id} value={member.name}>
+                  {member.name} · {member.title}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="text-sm font-medium">
+            辅拍摄像师
+            <select name="assistantVideographer" defaultValue="" className={fieldClassName}>
+              <option value="">暂未安排</option>
+              {crewStaff.map((member) => (
+                <option key={member.id} value={member.name}>
+                  {member.name} · {member.title}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="text-sm font-medium">
+            合同交付日期
+            <input name="deliveryDueDate" type="date" className={fieldClassName} />
           </label>
           </div>
 

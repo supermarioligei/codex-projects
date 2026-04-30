@@ -58,9 +58,9 @@ export default async function OrderDetailPage({
           <h2 className="mt-3 text-2xl font-semibold tracking-tight sm:text-3xl">
             {order.customer}
           </h2>
-          <p className="mt-3 max-w-2xl text-sm leading-7 text-white/82">
+        <p className="mt-3 max-w-2xl text-sm leading-7 text-white/82">
             {order.school} · {order.campus} · {order.className} · {order.id}
-          </p>
+        </p>
         </div>
         <div className="flex flex-wrap gap-3">
           {canEditOrders(user.role) ? (
@@ -125,6 +125,10 @@ export default async function OrderDetailPage({
 
           <div className="mt-5 grid gap-4 sm:grid-cols-2">
             <div className="rounded-2xl border border-[color:var(--line)] bg-white px-4 py-4">
+              <p className="text-sm muted">归属销售</p>
+              <p className="mt-2 font-semibold">{order.salesOwner || "待指定"}</p>
+            </div>
+            <div className="rounded-2xl border border-[color:var(--line)] bg-white px-4 py-4">
               <p className="text-sm muted">联系人</p>
               <p className="mt-2 font-semibold">{order.contact}</p>
             </div>
@@ -141,8 +145,28 @@ export default async function OrderDetailPage({
               <p className="mt-2 font-semibold">{order.packageName}</p>
             </div>
             <div className="rounded-2xl border border-[color:var(--line)] bg-white px-4 py-4">
-              <p className="text-sm muted">摄影师安排</p>
+              <p className="text-sm muted">导演 / 执行统筹</p>
+              <p className="mt-2 font-semibold">{order.director || "暂未安排"}</p>
+            </div>
+            <div className="rounded-2xl border border-[color:var(--line)] bg-white px-4 py-4">
+              <p className="text-sm muted">主拍摄影师</p>
               <p className="mt-2 font-semibold">{order.photographer || "暂未安排"}</p>
+            </div>
+            <div className="rounded-2xl border border-[color:var(--line)] bg-white px-4 py-4">
+              <p className="text-sm muted">辅拍摄影师</p>
+              <p className="mt-2 font-semibold">{order.assistantPhotographer || "暂未安排"}</p>
+            </div>
+            <div className="rounded-2xl border border-[color:var(--line)] bg-white px-4 py-4">
+              <p className="text-sm muted">主拍摄像师</p>
+              <p className="mt-2 font-semibold">{order.leadVideographer || "暂未安排"}</p>
+            </div>
+            <div className="rounded-2xl border border-[color:var(--line)] bg-white px-4 py-4">
+              <p className="text-sm muted">辅拍摄像师</p>
+              <p className="mt-2 font-semibold">{order.assistantVideographer || "暂未安排"}</p>
+            </div>
+            <div className="rounded-2xl border border-[color:var(--line)] bg-white px-4 py-4">
+              <p className="text-sm muted">合同交付日期</p>
+              <p className="mt-2 font-semibold">{order.deliveryDueDate || "待补充"}</p>
             </div>
             <div className="rounded-2xl border border-[color:var(--line)] bg-white px-4 py-4">
               <p className="text-sm muted">录入时间</p>

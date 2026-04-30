@@ -21,6 +21,10 @@ function buildPhotographerOptions(currentValue: string, options: string[]) {
   return options;
 }
 
+function toDateInputValue(value: string | undefined) {
+  return value ? value.slice(0, 10) : "";
+}
+
 export default async function EditOrderPage({
   params,
   searchParams,
@@ -31,7 +35,11 @@ export default async function EditOrderPage({
   const { id } = await params;
   const query = await searchParams;
   const order = await getOrderById(id);
-  const photographerStaff = await getActiveStaffByRole("photographer");
+  const [salesStaff, productionManagers, photographerStaff] = await Promise.all([
+    getActiveStaffByRole("sales"),
+    getActiveStaffByRole("production_manager"),
+    getActiveStaffByRole("photographer"),
+  ]);
 
   if (!order) {
     notFound();
@@ -39,6 +47,18 @@ export default async function EditOrderPage({
 
   const photographerOptions = buildPhotographerOptions(
     order.photographer ?? "",
+    photographerStaff.map((member) => member.name),
+  );
+  const assistantPhotographerOptions = buildPhotographerOptions(
+    order.assistantPhotographer ?? "",
+    photographerStaff.map((member) => member.name),
+  );
+  const leadVideographerOptions = buildPhotographerOptions(
+    order.leadVideographer ?? "",
+    photographerStaff.map((member) => member.name),
+  );
+  const assistantVideographerOptions = buildPhotographerOptions(
+    order.assistantVideographer ?? "",
     photographerStaff.map((member) => member.name),
   );
   const conflictOrder = query.conflictOrderId ? await getOrderById(query.conflictOrderId) : null;
@@ -194,7 +214,37 @@ export default async function EditOrderPage({
               </select>
             </label>
             <label className="text-sm font-medium">
-              摄影师安排
+              归属销售
+              <select
+                name="salesOwner"
+                defaultValue={order.salesOwner ?? ""}
+                className={fieldClassName}
+              >
+                <option value="">暂未指定</option>
+                {salesStaff.map((member) => (
+                  <option key={member.id} value={member.name}>
+                    {member.name} · {member.title}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="text-sm font-medium">
+              导演 / 执行统筹
+              <select
+                name="director"
+                defaultValue={order.director ?? ""}
+                className={fieldClassName}
+              >
+                <option value="">暂未安排</option>
+                {productionManagers.map((member) => (
+                  <option key={member.id} value={member.name}>
+                    {member.name} · {member.title}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="text-sm font-medium">
+              主拍摄影师
               <select
                 name="photographer"
                 defaultValue={order.photographer ?? ""}
@@ -211,6 +261,72 @@ export default async function EditOrderPage({
                   );
                 })}
               </select>
+            </label>
+            <label className="text-sm font-medium">
+              辅拍摄影师
+              <select
+                name="assistantPhotographer"
+                defaultValue={order.assistantPhotographer ?? ""}
+                className={fieldClassName}
+              >
+                <option value="">暂未安排</option>
+                {assistantPhotographerOptions.map((name) => {
+                  const member = photographerStaff.find((item) => item.name === name);
+
+                  return (
+                    <option key={name} value={name}>
+                      {member ? `${member.name} · ${member.title}` : `${name} · 历史录入`}
+                    </option>
+                  );
+                })}
+              </select>
+            </label>
+            <label className="text-sm font-medium">
+              主拍摄像师
+              <select
+                name="leadVideographer"
+                defaultValue={order.leadVideographer ?? ""}
+                className={fieldClassName}
+              >
+                <option value="">暂未安排</option>
+                {leadVideographerOptions.map((name) => {
+                  const member = photographerStaff.find((item) => item.name === name);
+
+                  return (
+                    <option key={name} value={name}>
+                      {member ? `${member.name} · ${member.title}` : `${name} · 历史录入`}
+                    </option>
+                  );
+                })}
+              </select>
+            </label>
+            <label className="text-sm font-medium">
+              辅拍摄像师
+              <select
+                name="assistantVideographer"
+                defaultValue={order.assistantVideographer ?? ""}
+                className={fieldClassName}
+              >
+                <option value="">暂未安排</option>
+                {assistantVideographerOptions.map((name) => {
+                  const member = photographerStaff.find((item) => item.name === name);
+
+                  return (
+                    <option key={name} value={name}>
+                      {member ? `${member.name} · ${member.title}` : `${name} · 历史录入`}
+                    </option>
+                  );
+                })}
+              </select>
+            </label>
+            <label className="text-sm font-medium">
+              合同交付日期
+              <input
+                name="deliveryDueDate"
+                type="date"
+                defaultValue={toDateInputValue(order.deliveryDueDate)}
+                className={fieldClassName}
+              />
             </label>
           </div>
 

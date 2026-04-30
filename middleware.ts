@@ -13,11 +13,33 @@ function hasRoleAccess(pathname: string, role: string | undefined) {
   }
 
   if (role === "sales") {
-    if (pathname.startsWith("/staff")) {
-      return false;
-    }
+    return pathname === "/" || pathname === "/orders" || pathname.startsWith("/orders/") || pathname === "/alerts";
+  }
 
-    return !pathname.startsWith("/finance/") || pathname === "/finance";
+  if (role === "production_manager") {
+    return (
+      pathname === "/" ||
+      pathname === "/orders" ||
+      pathname.startsWith("/orders/") ||
+      pathname === "/schedule" ||
+      pathname === "/alerts" ||
+      pathname === "/delivery"
+    );
+  }
+
+  if (role === "finance_director") {
+    return pathname === "/" || pathname === "/orders" || pathname.startsWith("/orders/") || pathname === "/finance" || pathname.startsWith("/finance/");
+  }
+
+  if (role === "delivery_manager") {
+    return (
+      pathname === "/" ||
+      pathname === "/orders" ||
+      pathname.startsWith("/orders/") ||
+      pathname === "/schedule" ||
+      pathname === "/alerts" ||
+      pathname === "/delivery"
+    );
   }
 
   if (role === "photographer") {

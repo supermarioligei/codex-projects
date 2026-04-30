@@ -15,8 +15,11 @@ function toDate(value: string) {
 function summarizeRole(role: UserRole) {
   const descriptions: Record<UserRole, string> = {
     owner: "负责经营决策、价格策略和关键财务把控",
-    sales: "负责接单推进、客户沟通、尾款回收和交付协同",
-    photographer: "负责拍摄执行、器材准备、现场交付素材和班级对接",
+    sales: "负责销售建单、客户沟通和订单推进",
+    production_manager: "负责排期、导演安排和拍摄团队执行统筹",
+    finance_director: "负责财务流水、回款核对和经营数据把控",
+    delivery_manager: "负责交付推进、产出跟踪和超期风险控制",
+    photographer: "负责现场拍摄或摄像执行，跟进自己参与的任务",
   };
 
   return descriptions[role];
@@ -73,6 +76,9 @@ export default async function StaffPage({
   const roleGroups: Array<{ role: UserRole; members: StaffMember[] }> = [
     { role: "owner", members: ownerMembers },
     { role: "sales", members: salesMembers },
+    { role: "production_manager", members: await getStaffByRole("production_manager", { includeInactive: true }) },
+    { role: "finance_director", members: await getStaffByRole("finance_director", { includeInactive: true }) },
+    { role: "delivery_manager", members: await getStaffByRole("delivery_manager", { includeInactive: true }) },
     { role: "photographer", members: photographerMembers },
   ];
   const activeMembers = staffMembers.filter((member) => member.active);
@@ -227,6 +233,9 @@ export default async function StaffPage({
                             >
                               <option value="owner">{roleLabels.owner}</option>
                               <option value="sales">{roleLabels.sales}</option>
+                              <option value="production_manager">{roleLabels.production_manager}</option>
+                              <option value="finance_director">{roleLabels.finance_director}</option>
+                              <option value="delivery_manager">{roleLabels.delivery_manager}</option>
                               <option value="photographer">{roleLabels.photographer}</option>
                             </select>
                           </label>
@@ -310,9 +319,12 @@ export default async function StaffPage({
 
             <label className="mt-4 block text-sm font-medium">
               岗位
-              <select name="role" defaultValue="photographer" className={fieldClassName}>
+              <select name="role" defaultValue="sales" className={fieldClassName}>
                 <option value="owner">{roleLabels.owner}</option>
                 <option value="sales">{roleLabels.sales}</option>
+                <option value="production_manager">{roleLabels.production_manager}</option>
+                <option value="finance_director">{roleLabels.finance_director}</option>
+                <option value="delivery_manager">{roleLabels.delivery_manager}</option>
                 <option value="photographer">{roleLabels.photographer}</option>
               </select>
             </label>

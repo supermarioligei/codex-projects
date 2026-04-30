@@ -1,5 +1,75 @@
 [
   {
+    "id": "photographer-afeng",
+    "name": "阿峰",
+    "role": "photographer",
+    "title": "主拍摄影师",
+    "active": true,
+    "username": "afeng",
+    "passwordSalt": "legacy-photographer-afeng",
+    "passwordHash": "395e0df6ce17b33e026db19912f07feafb3f47965a382f980410371f2851c461a4d56f142bd018af4272c778c3238fbc237b67df1a7998ff9d1647a4968b4c79"
+  },
+  {
+    "id": "photographer-anan",
+    "name": "安安",
+    "role": "photographer",
+    "title": "辅拍摄影师",
+    "active": true,
+    "username": "anan",
+    "passwordSalt": "legacy-photographer-anan",
+    "passwordHash": "5932ea08b60de4c7649af4f753854a1df7abdad23d7e126c0cd1950687cb3c03e2cfbb6b65a692292407b08a5b795511858d7125fb24e59e8e3c34d17ffb1513"
+  },
+  {
+    "id": "production-manager-haoran",
+    "name": "浩然",
+    "role": "production_manager",
+    "title": "拍摄部门主管",
+    "active": true,
+    "username": "haoran",
+    "passwordSalt": "legacy-production-manager-haoran",
+    "passwordHash": "87b543a5de0fa57723ee888ccce71350f0004fd242ccfff0c7f09308b6e4c51831589b27d586c7fd2d5137189b6d257afe57344387ae6164cb251d0b2bcbda05"
+  },
+  {
+    "id": "finance-director-meng",
+    "name": "孟总",
+    "role": "finance_director",
+    "title": "财务总监",
+    "active": true,
+    "username": "meng",
+    "passwordSalt": "legacy-finance-director-meng",
+    "passwordHash": "bc9360b22c4173860f666f140b2edb870f9907074fdd016e490ee6930d77cfd5d1dca04fe8ad4f138da7d9974bc5476436cd44590d2347b882fff8dc86b77c41"
+  },
+  {
+    "id": "sales-xiaohe",
+    "name": "小禾",
+    "role": "sales",
+    "title": "销售顾问",
+    "active": true,
+    "username": "xiaohe",
+    "passwordSalt": "legacy-sales-xiaohe",
+    "passwordHash": "04972a36c00720d5e785d21feeb804d80341be7ecfa29ed8293b079303543f32d0f0920856a64c50367bf27dd68f785cd3b3a04d8db2433772b667dae6340595"
+  },
+  {
+    "id": "sales-lin",
+    "name": "小林",
+    "role": "sales",
+    "title": "销售顾问",
+    "active": true,
+    "username": "xiaolin",
+    "passwordSalt": "legacy-sales-lin",
+    "passwordHash": "fe1bb3b380b2e66825cf9185dfc879d24e7a96033cc1b506f8ff7264e6613fcf419c8dc600ae254ee61314e85cecfb437483fa63369d8f42375876c2b654dd56"
+  },
+  {
+    "id": "delivery-manager-yunyun",
+    "name": "芸芸",
+    "role": "delivery_manager",
+    "title": "交付主管",
+    "active": true,
+    "username": "yunyun",
+    "passwordSalt": "legacy-delivery-manager-yunyun",
+    "passwordHash": "ae0f78746daf04ab7728d0c5aa3914f73b6d67fbc12e87e08b04be273f601fe190c41088e0beaaaff2676352fed133951df2afc8069f916bd68a9fb85e763ad9"
+  },
+  {
     "id": "owner-zhang",
     "name": "张总",
     "role": "owner",
@@ -10,53 +80,13 @@
     "passwordHash": "6836cdb630ad88ad0e9c0587eb35b36162b42437c83f73694dfb644bbfad9f5e95699b5eef56b9332bdbf522142e0f7352759a5f801b185ee582cb78297acf63"
   },
   {
-    "id": "sales-lin",
-    "name": "小林",
-    "role": "sales",
-    "title": "客服统筹",
-    "active": true,
-    "username": "lin",
-    "passwordSalt": "legacy-sales-lin",
-    "passwordHash": "fe1bb3b380b2e66825cf9185dfc879d24e7a96033cc1b506f8ff7264e6613fcf419c8dc600ae254ee61314e85cecfb437483fa63369d8f42375876c2b654dd56"
-  },
-  {
-    "id": "sales-xiaohe",
-    "name": "小禾",
-    "role": "sales",
-    "title": "交付跟进",
-    "active": true,
-    "username": "xiaohe",
-    "passwordSalt": "legacy-sales-xiaohe",
-    "passwordHash": "04972a36c00720d5e785d21feeb804d80341be7ecfa29ed8293b079303543f32d0f0920856a64c50367bf27dd68f785cd3b3a04d8db2433772b667dae6340595"
-  },
-  {
-    "id": "photographer-afeng",
-    "name": "阿峰",
-    "role": "photographer",
-    "title": "主摄影师",
-    "active": true,
-    "username": "afeng",
-    "passwordSalt": "legacy-photographer-afeng",
-    "passwordHash": "395e0df6ce17b33e026db19912f07feafb3f47965a382f980410371f2851c461a4d56f142bd018af4272c778c3238fbc237b67df1a7998ff9d1647a4968b4c79"
-  },
-  {
     "id": "photographer-ziyu",
     "name": "子瑜",
     "role": "photographer",
-    "title": "跟拍摄影师",
+    "title": "主拍摄像师",
     "active": true,
     "username": "ziyu",
     "passwordSalt": "legacy-photographer-ziyu",
     "passwordHash": "476bf44019cebb047656ca8e46231d7ecec7ff1ed5f5feb4d51c3081f4a32daf29ad14df37b0f9a6a2506de596db878809ae5d58eb43cdb620a63d54ef2dd010"
-  },
-  {
-    "id": "photographer-anan",
-    "name": "安安",
-    "role": "photographer",
-    "title": "外景摄影师",
-    "active": true,
-    "username": "anan",
-    "passwordSalt": "legacy-photographer-anan",
-    "passwordHash": "5932ea08b60de4c7649af4f753854a1df7abdad23d7e126c0cd1950687cb3c03e2cfbb6b65a692292407b08a5b795511858d7125fb24e59e8e3c34d17ffb1513"
   }
 ]

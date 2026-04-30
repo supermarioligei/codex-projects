@@ -18,6 +18,22 @@ function endOfMonth(date: Date) {
   return new Date(date.getFullYear(), date.getMonth() + 1, 0, 23, 59, 59, 999);
 }
 
+function startOfDay(date: Date) {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
+function endOfDay(date: Date) {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59, 999);
+}
+
+function startOfYear(date: Date) {
+  return new Date(date.getFullYear(), 0, 1);
+}
+
+function endOfYear(date: Date) {
+  return new Date(date.getFullYear(), 11, 31, 23, 59, 59, 999);
+}
+
 function endOfWeek(date: Date) {
   const next = new Date(date);
   next.setHours(23, 59, 59, 999);
@@ -33,7 +49,11 @@ export function buildDashboardMetrics(
 ) {
   const monthStart = startOfMonth(now);
   const monthEnd = endOfMonth(now);
+  const dayStart = startOfDay(now);
+  const dayEnd = endOfDay(now);
   const weekEnd = endOfWeek(now);
+  const yearStart = startOfYear(now);
+  const yearEnd = endOfYear(now);
 
   const monthlyOrders = orders.filter((order) => {
     const shootAt = toDate(order.shootDate);
@@ -45,13 +65,74 @@ export function buildDashboardMetrics(
     0,
   );
   const monthlyReceivedAmount = financeEntries
-    .filter((entry) => entry.type === "收款")
+    .filter((entry) => {
+      if (entry.type !== "收款") {
+        return false;
+      }
+
+      const entryAt = toDate(entry.time);
+      return entryAt >= monthStart && entryAt <= monthEnd;
+    })
     .reduce((sum, entry) => sum + parseCurrency(entry.amount), 0);
   const monthlyRefundAmount = financeEntries
-    .filter((entry) => entry.type === "退款")
+    .filter((entry) => {
+      if (entry.type !== "退款") {
+        return false;
+      }
+
+      const entryAt = toDate(entry.time);
+      return entryAt >= monthStart && entryAt <= monthEnd;
+    })
     .reduce((sum, entry) => sum + parseCurrency(entry.amount), 0);
   const monthlyCostAmount = financeEntries
-    .filter((entry) => entry.type === "支出")
+    .filter((entry) => {
+      if (entry.type !== "支出") {
+        return false;
+      }
+
+      const entryAt = toDate(entry.time);
+      return entryAt >= monthStart && entryAt <= monthEnd;
+    })
+    .reduce((sum, entry) => sum + parseCurrency(entry.amount), 0);
+  const dailyReceivedAmount = financeEntries
+    .filter((entry) => {
+      if (entry.type !== "收款") {
+        return false;
+      }
+
+      const entryAt = toDate(entry.time);
+      return entryAt >= dayStart && entryAt <= dayEnd;
+    })
+    .reduce((sum, entry) => sum + parseCurrency(entry.amount), 0);
+  const yearlyReceivedAmount = financeEntries
+    .filter((entry) => {
+      if (entry.type !== "收款") {
+        return false;
+      }
+
+      const entryAt = toDate(entry.time);
+      return entryAt >= yearStart && entryAt <= yearEnd;
+    })
+    .reduce((sum, entry) => sum + parseCurrency(entry.amount), 0);
+  const yearlyRefundAmount = financeEntries
+    .filter((entry) => {
+      if (entry.type !== "退款") {
+        return false;
+      }
+
+      const entryAt = toDate(entry.time);
+      return entryAt >= yearStart && entryAt <= yearEnd;
+    })
+    .reduce((sum, entry) => sum + parseCurrency(entry.amount), 0);
+  const yearlyCostAmount = financeEntries
+    .filter((entry) => {
+      if (entry.type !== "支出") {
+        return false;
+      }
+
+      const entryAt = toDate(entry.time);
+      return entryAt >= yearStart && entryAt <= yearEnd;
+    })
     .reduce((sum, entry) => sum + parseCurrency(entry.amount), 0);
 
   const weeklyShoots = orders.filter((order) => {
@@ -75,9 +156,13 @@ export function buildDashboardMetrics(
 
   return {
     monthlySignedAmount,
+    dailyReceivedAmount,
     monthlyReceivedAmount,
     monthlyRefundAmount,
     monthlyCostAmount,
+    yearlyReceivedAmount,
+    yearlyRefundAmount,
+    yearlyCostAmount,
     weeklyShoots,
     deliveryActive,
     highRiskOrders,

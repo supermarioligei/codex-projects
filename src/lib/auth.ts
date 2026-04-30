@@ -2,7 +2,13 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import type { OrderWithFinanceSummary } from "@/lib/order-store";
 
-export type UserRole = "owner" | "sales" | "photographer";
+export type UserRole =
+  | "owner"
+  | "sales"
+  | "production_manager"
+  | "finance_director"
+  | "delivery_manager"
+  | "photographer";
 
 export type SessionUser = {
   id: string;
@@ -18,24 +24,36 @@ export const SESSION_USERNAME_COOKIE = "ty_username";
 
 export const roleLabels: Record<UserRole, string> = {
   owner: "老板",
-  sales: "客服",
-  photographer: "摄影师",
+  sales: "销售",
+  production_manager: "拍摄主管",
+  finance_director: "财务总监",
+  delivery_manager: "交付主管",
+  photographer: "拍摄执行",
 };
 
 export function canEditOrders(role: UserRole) {
+  return (
+    role === "owner" ||
+    role === "sales" ||
+    role === "production_manager" ||
+    role === "delivery_manager"
+  );
+}
+
+export function canCreateOrders(role: UserRole) {
   return role === "owner" || role === "sales";
 }
 
 export function canViewFinance(role: UserRole) {
-  return role === "owner" || role === "sales";
+  return role === "owner" || role === "finance_director";
 }
 
 export function canEditFinance(role: UserRole) {
-  return role === "owner";
+  return role === "owner" || role === "finance_director";
 }
 
 export function canViewDelivery(role: UserRole) {
-  return role === "owner" || role === "sales";
+  return role === "owner" || role === "production_manager" || role === "delivery_manager";
 }
 
 function normalizeName(value: string) {
@@ -43,18 +61,30 @@ function normalizeName(value: string) {
 }
 
 export function isOrderAssignedToPhotographer(
-  order: Pick<OrderWithFinanceSummary, "photographer">,
-  photographerName: string,
+  order: Pick<
+    OrderWithFinanceSummary,
+    | "photographer"
+    | "assistantPhotographer"
+    | "leadVideographer"
+    | "assistantVideographer"
+    | "director"
+  >,
+  crewName: string,
 ) {
-  const current = normalizeName(photographerName);
-  const assigned = normalizeName(order.photographer ?? "");
+  const current = normalizeName(crewName);
 
-  if (!current || !assigned) {
+  if (!current) {
     return false;
   }
 
-  const candidates = assigned
-    .split(/[\/,，、|]/)
+  const candidates = [
+    order.photographer,
+    order.assistantPhotographer,
+    order.leadVideographer,
+    order.assistantVideographer,
+    order.director,
+  ]
+    .flatMap((value) => String(value ?? "").split(/[\/,，、|]/))
     .map((item) => normalizeName(item))
     .filter(Boolean);
 

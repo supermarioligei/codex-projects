@@ -31,6 +31,9 @@ export function DeliveryBoard({ orders, emptyText }: DeliveryBoardProps) {
                 <p className="mt-1 text-sm muted">
                   {order.school} · {order.className} · {order.shootDate}
                 </p>
+                <p className="mt-1 text-sm muted">
+                  销售：{order.salesOwner || "未指定"} · 导演：{order.director || "未安排"}
+                </p>
               </div>
               <span className={statusClassName[order.status]}>{order.status}</span>
             </div>
@@ -39,7 +42,9 @@ export function DeliveryBoard({ orders, emptyText }: DeliveryBoardProps) {
               <div className="rounded-2xl border border-[color:var(--line)] bg-[#fffdf9] px-3 py-3">
                 <p className="text-xs uppercase tracking-[0.16em] muted">交付进度</p>
                 <p className="mt-2 text-sm font-semibold">{order.packageName}</p>
-                <p className="mt-1 text-sm muted">{order.location || "地点已完成拍摄"}</p>
+                <p className="mt-1 text-sm muted">
+                  {order.location || "地点已完成拍摄"} · 截止 {order.deliveryDueDate || "待补充"}
+                </p>
               </div>
               <div className="rounded-2xl border border-[color:var(--line)] bg-[#fffdf9] px-3 py-3">
                 <p className="text-xs uppercase tracking-[0.16em] muted">回款状态</p>
@@ -54,7 +59,7 @@ export function DeliveryBoard({ orders, emptyText }: DeliveryBoardProps) {
                   {order.outstandingAmount > 0 ? "先确认尾款" : "可推进交付"}
                 </p>
                 <p className="mt-1 text-sm muted">
-                  {order.photographer || "摄影师待补充"} · {order.contact}
+                  主拍 {order.photographer || "待补充"} · 摄像 {order.leadVideographer || "待补充"}
                 </p>
               </div>
             </div>

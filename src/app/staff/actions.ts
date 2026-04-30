@@ -19,6 +19,17 @@ function readActive(formData: FormData, key: string) {
   return readText(formData, key) === "active";
 }
 
+function isSupportedRole(role: string): role is UserRole {
+  return [
+    "owner",
+    "sales",
+    "production_manager",
+    "finance_director",
+    "delivery_manager",
+    "photographer",
+  ].includes(role);
+}
+
 export async function createStaffAction(formData: FormData) {
   const user = await requireSession(["owner"]);
   const name = readText(formData, "name");
@@ -33,7 +44,7 @@ export async function createStaffAction(formData: FormData) {
     !username ||
     !title ||
     !password ||
-    !["owner", "sales", "photographer"].includes(role)
+    !isSupportedRole(role)
   ) {
     redirect("/staff?error=create-missing");
   }
@@ -74,7 +85,7 @@ export async function updateStaffAction(formData: FormData) {
   const active = readActive(formData, "active");
   const password = readText(formData, "password");
 
-  if (!id || !name || !username || !title || !["owner", "sales", "photographer"].includes(role)) {
+  if (!id || !name || !username || !title || !isSupportedRole(role)) {
     redirect("/staff?error=update-missing");
   }
 
