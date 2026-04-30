@@ -1,26 +1,99 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f6f1e8;
+  --foreground: #1f2a2c;
+  --panel: rgba(255, 252, 247, 0.84);
+  --panel-strong: #fffdf8;
+  --muted: #5f6d70;
+  --line: rgba(61, 81, 77, 0.12);
+  --accent: #df6f4f;
+  --accent-soft: rgba(223, 111, 79, 0.14);
+  --success: #2f7d62;
+  --shadow: 0 24px 80px rgba(64, 47, 32, 0.12);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", sans-serif;
+  --font-mono: "SFMono-Regular", "Menlo", "Monaco", monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background:
+    radial-gradient(circle at top left, rgba(255, 222, 188, 0.95), transparent 30%),
+    radial-gradient(circle at top right, rgba(165, 212, 197, 0.65), transparent 28%),
+    linear-gradient(180deg, #f8f1e5 0%, #f6f1e8 42%, #f2ede4 100%);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+::selection {
+  background: rgba(223, 111, 79, 0.22);
+}
+
+.glass-panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(18px);
+}
+
+.soft-card {
+  background: var(--panel-strong);
+  border: 1px solid var(--line);
+}
+
+.status-pill {
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 0.3rem 0.7rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.status-waiting {
+  background: rgba(223, 111, 79, 0.12);
+  color: #b3563a;
+  border-color: rgba(223, 111, 79, 0.18);
+}
+
+.status-progress {
+  background: rgba(66, 125, 189, 0.12);
+  color: #2b5f96;
+  border-color: rgba(66, 125, 189, 0.18);
+}
+
+.status-delivery {
+  background: rgba(183, 117, 48, 0.12);
+  color: #9b6020;
+  border-color: rgba(183, 117, 48, 0.18);
+}
+
+.status-done {
+  background: rgba(47, 125, 98, 0.12);
+  color: var(--success);
+  border-color: rgba(47, 125, 98, 0.18);
+}
+
+.metric-accent {
+  color: var(--accent);
+}
+
+.muted {
+  color: var(--muted);
 }
