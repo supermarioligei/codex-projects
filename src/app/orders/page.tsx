@@ -3,19 +3,68 @@ import { AdminShell } from "@/components/admin-shell";
 import { OrdersTable } from "@/components/orders-table";
 import { canEditOrders, filterOrdersForUser, requireSession } from "@/lib/auth";
 import { getOrders } from "@/lib/order-store";
+import type { OrderStatus } from "@/lib/mock-data";
 
 function parseCurrency(value: string) {
   return Number(value.replace(/[^\d.-]/g, "")) || 0;
 }
 
+const orderStatuses: OrderStatus[] = ["待确认", "待拍摄", "待选片", "待交付", "已完成"];
+
+function matchesSearch(order: Awaited<ReturnType<typeof getOrders>>[number], keyword: string) {
+  if (!keyword) {
+    return true;
+  }
+
+  const haystack = [
+    order.customer,
+    order.school,
+    order.className,
+    order.contact,
+    order.campus,
+    order.packageName,
+    order.photographer ?? "",
+  ]
+    .join(" ")
+    .toLowerCase();
+
+  return haystack.includes(keyword.toLowerCase());
+}
+
 export default async function OrdersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ created?: string }>;
+  searchParams: Promise<{
+    created?: string;
+    q?: string;
+    status?: string;
+    photographer?: string;
+  }>;
 }) {
   const user = await requireSession();
-  const orders = filterOrdersForUser(await getOrders(), user);
   const params = await searchParams;
+  const allOrders = filterOrdersForUser(await getOrders(), user);
+  const searchKeyword = (params.q ?? "").trim();
+  const selectedStatus = (params.status ?? "").trim();
+  const selectedPhotographer = (params.photographer ?? "").trim();
+  const orders = allOrders.filter((order) => {
+    const statusMatches = !selectedStatus || order.status === selectedStatus;
+    const photographerMatches =
+      !selectedPhotographer || (order.photographer ?? "") === selectedPhotographer;
+
+    return (
+      statusMatches &&
+      photographerMatches &&
+      matchesSearch(order, searchKeyword)
+    );
+  });
+  const photographerOptions = Array.from(
+    new Set(
+      allOrders
+        .map((order) => order.photographer?.trim())
+        .filter((value): value is string => Boolean(value)),
+    ),
+  ).sort((a, b) => a.localeCompare(b, "zh-CN"));
   const summaryCards = [
     {
       label: "待拍摄",
@@ -125,6 +174,69 @@ export default async function OrdersPage({
               <p className="mt-1 font-medium">按时间升序</p>
             </div>
           </div>
+        </div>
+
+        <form className="mt-5 grid gap-3 lg:grid-cols-[minmax(0,1.4fr)_0.9fr_0.9fr_auto]">
+          <label className="text-sm font-medium">
+            搜索订单
+            <input
+              name="q"
+              defaultValue={searchKeyword}
+              className="mt-2 w-full rounded-2xl border border-[color:var(--line)] bg-white px-4 py-3 text-sm outline-none transition placeholder:text-[#93a09d] focus:border-[color:var(--accent)]"
+              placeholder="按客户、学校、班级、联系人、摄影师搜索"
+            />
+          </label>
+
+          <label className="text-sm font-medium">
+            订单状态
+            <select
+              name="status"
+              defaultValue={selectedStatus}
+              className="mt-2 w-full rounded-2xl border border-[color:var(--line)] bg-white px-4 py-3 text-sm outline-none transition focus:border-[color:var(--accent)]"
+            >
+              <option value="">全部状态</option>
+              {orderStatuses.map((status) => (
+                <option key={status} value={status}>
+                  {status}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="text-sm font-medium">
+            摄影师
+            <select
+              name="photographer"
+              defaultValue={selectedPhotographer}
+              className="mt-2 w-full rounded-2xl border border-[color:var(--line)] bg-white px-4 py-3 text-sm outline-none transition focus:border-[color:var(--accent)]"
+            >
+              <option value="">全部摄影师</option>
+              {photographerOptions.map((name) => (
+                <option key={name} value={name}>
+                  {name}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <div className="flex items-end gap-3">
+            <button className="rounded-full bg-[color:var(--accent)] px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-orange-200/70 transition hover:brightness-105">
+              应用筛选
+            </button>
+            <Link
+              href="/orders"
+              className="rounded-full border border-[color:var(--line)] px-5 py-3 text-sm font-semibold hover:bg-white"
+            >
+              重置
+            </Link>
+          </div>
+        </form>
+
+        <div className="mt-4 flex flex-wrap gap-3 text-sm muted">
+          <span>当前结果：{orders.length} 单</span>
+          {searchKeyword ? <span>关键词：{searchKeyword}</span> : null}
+          {selectedStatus ? <span>状态：{selectedStatus}</span> : null}
+          {selectedPhotographer ? <span>摄影师：{selectedPhotographer}</span> : null}
         </div>
 
         <div className="mt-5">

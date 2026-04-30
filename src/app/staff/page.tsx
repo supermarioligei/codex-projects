@@ -1,5 +1,6 @@
 import { AdminShell } from "@/components/admin-shell";
 import { createStaffAction, updateStaffAction } from "@/app/staff/actions";
+import { getActivityLogs } from "@/lib/activity-log";
 import { roleLabels, type UserRole } from "@/lib/auth";
 import { getOrders } from "@/lib/order-store";
 import { getStaffByRole, getStaffMembers, type StaffMember } from "@/lib/staff";
@@ -43,14 +44,24 @@ function getNextShoot(member: StaffMember, orders: Awaited<ReturnType<typeof get
   );
 }
 
+function formatLogTime(value: string) {
+  return new Date(value).toLocaleString("zh-CN", {
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
 export default async function StaffPage({
   searchParams,
 }: {
   searchParams: Promise<{ created?: string; updated?: string; error?: string }>;
 }) {
   const params = await searchParams;
-  const [orders, staffMembers, ownerMembers, salesMembers, photographerMembers] =
+  const [activityLogs, orders, staffMembers, ownerMembers, salesMembers, photographerMembers] =
     await Promise.all([
+      getActivityLogs(12),
       getOrders(),
       getStaffMembers({ includeInactive: true }),
       getStaffByRole("owner", { includeInactive: true }),
@@ -107,8 +118,10 @@ export default async function StaffPage({
       {params.error ? (
         <section className="rounded-[1.5rem] border border-[#f0c8b2] bg-[#fff4ee] px-5 py-4 text-sm text-[#a3512d]">
           {params.error === "create-missing" || params.error === "update-missing"
-            ? "请先补全姓名、岗位和职务后再保存。"
-            : "这条人员记录没有找到，可能已经被调整过了。"}
+            ? "请先补全姓名、用户名、岗位、职务和必要密码后再保存。"
+            : params.error === "username-exists"
+              ? "这个用户名已经被其他账号占用了，请换一个。"
+              : "这条人员记录没有找到，可能已经被调整过了。"}
         </section>
       ) : null}
 
@@ -190,6 +203,14 @@ export default async function StaffPage({
                             />
                           </label>
                           <label className="text-sm font-medium">
+                            登录用户名
+                            <input
+                              name="username"
+                              defaultValue={member.username}
+                              className={fieldClassName}
+                            />
+                          </label>
+                          <label className="text-sm font-medium">
                             职务
                             <input
                               name="title"
@@ -220,6 +241,15 @@ export default async function StaffPage({
                               <option value="inactive">停用</option>
                             </select>
                           </label>
+                          <label className="text-sm font-medium md:col-span-2">
+                            重置密码
+                            <input
+                              name="password"
+                              type="password"
+                              className={fieldClassName}
+                              placeholder="留空表示不改密码；填写后会重置成新密码"
+                            />
+                          </label>
                         </div>
 
                         <div className="mt-4 grid gap-3 sm:grid-cols-2">
@@ -232,6 +262,10 @@ export default async function StaffPage({
                             <p className="mt-1 text-sm font-semibold">
                               {nextShoot ? nextShoot.shootDate : "暂未安排"}
                             </p>
+                          </div>
+                          <div className="rounded-2xl bg-[#f8f5ef] px-4 py-3 text-sm sm:col-span-2">
+                            <p className="muted">当前账号</p>
+                            <p className="mt-1 text-sm font-semibold">{member.username}</p>
                           </div>
                         </div>
 
@@ -252,7 +286,7 @@ export default async function StaffPage({
         <section className="soft-card rounded-[1.75rem] p-5">
           <div>
             <p className="text-sm font-semibold">新增人员</p>
-            <p className="mt-1 text-sm muted">适合录入新入职摄影师、客服或管理者</p>
+            <p className="mt-1 text-sm muted">适合录入新入职摄影师、客服或管理者，并同时开通登录账号</p>
           </div>
 
           <form action={createStaffAction} className="mt-5">
@@ -262,6 +296,15 @@ export default async function StaffPage({
                 name="name"
                 className={fieldClassName}
                 placeholder="例如：小宇"
+              />
+            </label>
+
+            <label className="mt-4 block text-sm font-medium">
+              登录用户名
+              <input
+                name="username"
+                className={fieldClassName}
+                placeholder="例如：xiaoyu"
               />
             </label>
 
@@ -284,6 +327,16 @@ export default async function StaffPage({
             </label>
 
             <label className="mt-4 block text-sm font-medium">
+              初始密码
+              <input
+                name="password"
+                type="password"
+                className={fieldClassName}
+                placeholder="例如：Tongying@2026"
+              />
+            </label>
+
+            <label className="mt-4 block text-sm font-medium">
               启用状态
               <select name="active" defaultValue="active" className={fieldClassName}>
                 <option value="active">启用</option>
@@ -297,7 +350,37 @@ export default async function StaffPage({
           </form>
 
           <div className="mt-6 rounded-[1.4rem] border border-dashed border-[color:var(--line)] bg-[#fffaf3] px-4 py-4 text-sm leading-6 muted">
-            停用后，这个人会从登录建议和摄影师分配下拉里消失，但历史订单里的名字会继续保留。
+            停用后，这个人会立即失去登录权限，也会从摄影师分配下拉里消失，但历史订单里的名字会继续保留。
+          </div>
+
+          <div className="mt-6">
+            <p className="text-sm font-semibold">最近操作记录</p>
+            <p className="mt-1 text-sm muted">先记录订单、流水和账号的新增与修改，便于试用期追踪问题。</p>
+          </div>
+
+          <div className="mt-4 space-y-3">
+            {activityLogs.length === 0 ? (
+              <div className="rounded-[1.4rem] border border-dashed border-[color:var(--line)] bg-white/75 px-4 py-6 text-sm muted">
+                当前还没有操作记录，后续新增或修改订单、流水、账号后会自动出现在这里。
+              </div>
+            ) : (
+              activityLogs.map((entry) => (
+                <article
+                  key={entry.id}
+                  className="rounded-[1.4rem] border border-[color:var(--line)] bg-white/85 p-4"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-semibold">{entry.summary}</p>
+                      <p className="mt-2 text-sm muted">
+                        {entry.actor.name}（{entry.actor.username} / {roleLabels[entry.actor.role]}）
+                      </p>
+                    </div>
+                    <span className="text-xs muted">{formatLogTime(entry.happenedAt)}</span>
+                  </div>
+                </article>
+              ))
+            )}
           </div>
         </section>
       </div>

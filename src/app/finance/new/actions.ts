@@ -2,6 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { createActivityLog } from "@/lib/activity-log";
+import { requireSession } from "@/lib/auth";
 import { createFinanceEntry } from "@/lib/finance-store";
 import { getOrders } from "@/lib/order-store";
 import type { FinanceEntryType } from "@/lib/mock-data";
@@ -16,6 +18,7 @@ function readAmount(formData: FormData, key: string) {
 }
 
 export async function createFinanceEntryAction(formData: FormData) {
+  const user = await requireSession(["owner"]);
   const type = readText(formData, "type") as FinanceEntryType;
   const title = readText(formData, "title");
   const amount = readAmount(formData, "amount");
@@ -32,7 +35,7 @@ export async function createFinanceEntryAction(formData: FormData) {
   const orders = await getOrders();
   const matchedOrder = orders.find((order) => order.id === orderId);
 
-  await createFinanceEntry({
+  const entry = await createFinanceEntry({
     type,
     title,
     amount,
@@ -42,6 +45,20 @@ export async function createFinanceEntryAction(formData: FormData) {
     category,
     counterparty,
     notes,
+  });
+
+  await createActivityLog({
+    action: "create",
+    entityType: "finance",
+    entityId: entry.id,
+    entityLabel: entry.title,
+    summary: `登记${type}流水 ${entry.title}`,
+    actor: {
+      id: user.id,
+      name: user.name,
+      username: user.username,
+      role: user.role,
+    },
   });
 
   revalidatePath("/");

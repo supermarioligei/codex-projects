@@ -2,6 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { createActivityLog } from "@/lib/activity-log";
+import { requireSession } from "@/lib/auth";
 import { createFinanceEntry } from "@/lib/finance-store";
 import { createOrder, findPhotographerConflict } from "@/lib/order-store";
 import type { OrderStatus } from "@/lib/mock-data";
@@ -16,6 +18,7 @@ function readAmount(formData: FormData, key: string) {
 }
 
 export async function createOrderAction(formData: FormData) {
+  const user = await requireSession(["owner", "sales"]);
   const customer = readText(formData, "customer");
   const contact = readText(formData, "contact");
   const school = readText(formData, "school");
@@ -68,6 +71,20 @@ export async function createOrderAction(formData: FormData) {
     notes,
   });
 
+  await createActivityLog({
+    action: "create",
+    entityType: "order",
+    entityId: order.id,
+    entityLabel: order.customer,
+    summary: `创建订单 ${order.customer}`,
+    actor: {
+      id: user.id,
+      name: user.name,
+      username: user.username,
+      role: user.role,
+    },
+  });
+
   if (paid > 0) {
     await createFinanceEntry({
       type: "收款",
@@ -79,6 +96,20 @@ export async function createOrderAction(formData: FormData) {
       category: "订单定金",
       counterparty: contact,
       notes: "创建订单时自动登记的首笔收款",
+    });
+
+    await createActivityLog({
+      action: "create",
+      entityType: "finance",
+      entityId: order.id,
+      entityLabel: `${order.customer}定金`,
+      summary: `创建订单时自动登记收款 ${order.customer}定金`,
+      actor: {
+        id: user.id,
+        name: user.name,
+        username: user.username,
+        role: user.role,
+      },
     });
   }
 

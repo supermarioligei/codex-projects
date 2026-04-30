@@ -1,7 +1,10 @@
 import { redirect } from "next/navigation";
-import { getSessionUser, roleLabels } from "@/lib/auth";
+import { getSessionUser } from "@/lib/auth";
 import { loginAction } from "@/app/login/actions";
-import { getActiveStaffByRole, getActiveStaffMembers } from "@/lib/staff";
+import {
+  DEFAULT_TEMP_PASSWORD,
+  getActiveStaffByRole,
+} from "@/lib/staff";
 
 const fieldClassName =
   "mt-2 w-full rounded-2xl border border-[color:var(--line)] bg-white px-4 py-3 text-sm outline-none transition placeholder:text-[#93a09d] focus:border-[color:var(--accent)]";
@@ -18,15 +21,11 @@ export default async function LoginPage({
   }
 
   const params = await searchParams;
-  const [staffMembers, photographerMembers, salesMembers, ownerMembers] = await Promise.all([
-    getActiveStaffMembers(),
+  const [photographerMembers, salesMembers, ownerMembers] = await Promise.all([
     getActiveStaffByRole("photographer"),
     getActiveStaffByRole("sales"),
     getActiveStaffByRole("owner"),
   ]);
-  const photographerNames = photographerMembers.map((member) => member.name);
-  const salesNames = salesMembers.map((member) => member.name);
-  const ownerNames = ownerMembers.map((member) => member.name);
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-6xl items-center px-4 py-8 sm:px-6 lg:px-8">
@@ -73,53 +72,52 @@ export default async function LoginPage({
             <p className="text-sm uppercase tracking-[0.22em] muted">Login</p>
             <h2 className="mt-3 text-3xl font-semibold tracking-tight">登录工作台</h2>
             <p className="mt-3 text-sm leading-7 muted">
-              当前先用演示登录，输入姓名并选择身份即可进入。后面我们再接正式账号体系。
+              现在已经切到正式账号登录。使用老板创建的用户名和密码进入系统，不再通过姓名和角色直接登录。
             </p>
           </div>
 
           {params.error === "missing" ? (
             <div className="mt-6 rounded-2xl border border-[#f0c8b2] bg-[#fff4ee] px-4 py-3 text-sm text-[#a3512d]">
-              请先填写姓名并选择身份。
+              请先填写用户名和密码。
             </div>
           ) : null}
           {params.error === "invalid" ? (
             <div className="mt-6 rounded-2xl border border-[#f0d3a8] bg-[#fff7e8] px-4 py-3 text-sm text-[#8a5a14]">
-              这个姓名和身份当前不在启用人员名单里，请联系老板检查人员管理。
+              用户名或密码不正确，或者该账号已经被停用，请联系老板检查人员管理。
             </div>
           ) : null}
 
           <form action={loginAction} className="mt-8 max-w-md">
             <label className="block text-sm font-medium">
-              你的姓名
+              用户名
               <input
-                name="name"
+                name="username"
                 required
-                list="staff-names"
                 className={fieldClassName}
-                placeholder="例如：张总 / 小林 / 阿峰"
+                placeholder="例如：zhang / xiaolin / afeng"
               />
             </label>
 
-            <datalist id="staff-names">
-              {staffMembers.map((member) => (
-                <option key={member.id} value={member.name} />
-              ))}
-            </datalist>
-
             <label className="mt-5 block text-sm font-medium">
-              登录身份
-              <select name="role" required defaultValue="owner" className={fieldClassName}>
-                <option value="owner">{roleLabels.owner}</option>
-                <option value="sales">{roleLabels.sales}</option>
-                <option value="photographer">{roleLabels.photographer}</option>
-              </select>
+              密码
+              <input
+                name="password"
+                type="password"
+                required
+                className={fieldClassName}
+                placeholder="输入你的登录密码"
+              />
             </label>
 
             <div className="mt-6 rounded-[1.5rem] border border-[color:var(--line)] bg-[#fffaf4] p-4 text-sm leading-6 muted">
-              <p className="font-medium text-[#4e4a44]">演示账号建议</p>
-              <p className="mt-2">老板：{ownerNames.join(" / ")}</p>
-              <p className="mt-1">客服：{salesNames.join(" / ")}</p>
-              <p className="mt-1">摄影师：{photographerNames.join(" / ")}</p>
+              <p className="font-medium text-[#4e4a44]">试用期初始账号</p>
+              <p className="mt-2">老板：{ownerMembers.map((member) => member.username).join(" / ")}</p>
+              <p className="mt-1">客服：{salesMembers.map((member) => member.username).join(" / ")}</p>
+              <p className="mt-1">
+                摄影师：{photographerMembers.map((member) => member.username).join(" / ")}
+              </p>
+              <p className="mt-3">默认初始密码：{DEFAULT_TEMP_PASSWORD}</p>
+              <p className="mt-1">建议老板登录后，尽快在人员管理里为每个人重置独立密码。</p>
             </div>
 
             <button className="mt-6 rounded-full bg-[color:var(--accent)] px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-orange-200/70 transition hover:brightness-105">

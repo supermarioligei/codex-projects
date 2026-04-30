@@ -2,6 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { createActivityLog } from "@/lib/activity-log";
+import { requireSession } from "@/lib/auth";
 import { findPhotographerConflict, updateOrder } from "@/lib/order-store";
 import type { OrderStatus } from "@/lib/mock-data";
 
@@ -15,6 +17,7 @@ function readAmount(formData: FormData, key: string) {
 }
 
 export async function updateOrderAction(formData: FormData) {
+  const user = await requireSession(["owner", "sales"]);
   const orderId = readText(formData, "orderId");
   const customer = readText(formData, "customer");
   const contact = readText(formData, "contact");
@@ -71,6 +74,20 @@ export async function updateOrderAction(formData: FormData) {
   if (!updated) {
     redirect("/orders");
   }
+
+  await createActivityLog({
+    action: "update",
+    entityType: "order",
+    entityId: updated.id,
+    entityLabel: updated.customer,
+    summary: `更新订单 ${updated.customer}`,
+    actor: {
+      id: user.id,
+      name: user.name,
+      username: user.username,
+      role: user.role,
+    },
+  });
 
   revalidatePath("/");
   revalidatePath("/orders");

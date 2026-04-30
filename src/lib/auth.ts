@@ -5,12 +5,16 @@ import type { OrderWithFinanceSummary } from "@/lib/order-store";
 export type UserRole = "owner" | "sales" | "photographer";
 
 export type SessionUser = {
+  id: string;
   name: string;
+  username: string;
   role: UserRole;
 };
 
+export const SESSION_USER_ID_COOKIE = "ty_user_id";
 export const SESSION_ROLE_COOKIE = "ty_role";
 export const SESSION_NAME_COOKIE = "ty_name";
+export const SESSION_USERNAME_COOKIE = "ty_username";
 
 export const roleLabels: Record<UserRole, string> = {
   owner: "老板",
@@ -80,10 +84,12 @@ export function canAccessOrder(order: OrderWithFinanceSummary, user: SessionUser
 
 export async function getSessionUser(): Promise<SessionUser | null> {
   const store = await cookies();
+  const id = store.get(SESSION_USER_ID_COOKIE)?.value;
   const role = store.get(SESSION_ROLE_COOKIE)?.value as UserRole | undefined;
   const name = store.get(SESSION_NAME_COOKIE)?.value;
+  const username = store.get(SESSION_USERNAME_COOKIE)?.value;
 
-  if (!role || !name) {
+  if (!id || !role || !name || !username) {
     return null;
   }
 
@@ -91,7 +97,7 @@ export async function getSessionUser(): Promise<SessionUser | null> {
     return null;
   }
 
-  return { role, name };
+  return { id, role, name, username };
 }
 
 export async function requireSession(allowedRoles?: UserRole[]) {
