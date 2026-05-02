@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AdminShell } from "@/components/admin-shell";
+import { deleteOrderAction } from "@/app/orders/[id]/actions";
 import { canAccessOrder, canEditFinance, canEditOrders, requireSession } from "@/lib/auth";
 import { getFinanceEntriesByOrderId } from "@/lib/finance-store";
 import { getOrderById } from "@/lib/order-store";
@@ -15,7 +16,7 @@ export default async function OrderDetailPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ updated?: string }>;
+  searchParams: Promise<{ updated?: string; error?: string }>;
 }) {
   const user = await requireSession();
   const { id } = await params;
@@ -49,6 +50,11 @@ export default async function OrderDetailPage({
       {query.updated === "1" ? (
         <section className="rounded-[1.5rem] border border-[#cfe7db] bg-[#f2fbf6] px-5 py-4 text-sm text-[#25644d]">
           订单信息已保存，详情页和列表页已经同步更新。
+        </section>
+      ) : null}
+      {query.error === "linked-finance" ? (
+        <section className="rounded-[1.5rem] border border-[#f0d3a8] bg-[#fff7e8] px-5 py-4 text-sm text-[#8a5a14]">
+          这张订单已经有关联流水，当前不允许直接删除。请先处理关联收款或退款记录，再决定是否删除订单。
         </section>
       ) : null}
 
@@ -221,6 +227,40 @@ export default async function OrderDetailPage({
               {order.notes || "当前还没有补充拍摄要求、交付时限或客户特别说明。"}
             </p>
           </div>
+
+          {user.role === "owner" ? (
+            <div className="mt-5 rounded-[1.5rem] border border-[#efc3b5] bg-[#fff5f0] px-4 py-4">
+              <p className="text-sm font-semibold text-[#a24d30]">危险操作</p>
+              <p className="mt-3 text-sm leading-6 text-[#8f5a48]">
+                仅老板可删除订单。为了避免账务对不上，已有 {order.linkedFinanceCount} 条关联流水的订单会被系统拦住，不能直接删除。
+              </p>
+              {order.linkedFinanceCount > 0 ? (
+                <div className="mt-4 rounded-2xl border border-[#f1d4c8] bg-white/85 px-4 py-4 text-sm text-[#8f5a48]">
+                  当前这张订单已经有关联流水，请先处理流水后再决定是否删除。
+                </div>
+              ) : (
+                <details className="mt-4 rounded-2xl border border-[#f1d4c8] bg-white/85 px-4 py-4">
+                  <summary className="cursor-pointer text-sm font-semibold text-[#a24d30]">
+                    展开删除订单
+                  </summary>
+                  <form action={deleteOrderAction} className="mt-4 space-y-4">
+                    <input type="hidden" name="orderId" value={order.id} />
+                    <label className="flex items-start gap-3 text-sm text-[#8f5a48]">
+                      <input
+                        type="checkbox"
+                        required
+                        className="mt-1 h-4 w-4 rounded border-[#d6b0a3]"
+                      />
+                      <span>我已确认：删除后这张订单会从订单、排期、提醒和交付视图里移除。</span>
+                    </label>
+                    <button className="rounded-full bg-[#c95f3b] px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-orange-200/70 transition hover:brightness-105">
+                      删除订单
+                    </button>
+                  </form>
+                </details>
+              )}
+            </div>
+          ) : null}
         </section>
 
         <section className="soft-card rounded-[1.75rem] p-5">

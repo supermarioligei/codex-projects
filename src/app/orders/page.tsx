@@ -41,6 +41,7 @@ export default async function OrdersPage({
 }: {
   searchParams: Promise<{
     created?: string;
+    deleted?: string;
     q?: string;
     status?: string;
     photographer?: string;
@@ -118,6 +119,11 @@ export default async function OrdersPage({
       {params.created === "1" ? (
         <section className="rounded-[1.5rem] border border-[#cfe7db] bg-[#f2fbf6] px-5 py-4 text-sm text-[#25644d]">
           订单已保存，列表已经同步更新。下一步可以继续补账务流水和订单详情。
+        </section>
+      ) : null}
+      {params.deleted === "1" ? (
+        <section className="rounded-[1.5rem] border border-[#cfe7db] bg-[#f2fbf6] px-5 py-4 text-sm text-[#25644d]">
+          订单已删除，列表、排期和提醒视图已经同步刷新。
         </section>
       ) : null}
 

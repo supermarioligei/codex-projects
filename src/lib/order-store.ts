@@ -201,6 +201,20 @@ export async function updateOrder(orderId: string, input: UpdateOrderInput) {
   return nextOrders.find((order) => order.id === orderId) ?? null;
 }
 
+export async function deleteOrder(orderId: string) {
+  const existing = await readStoredOrders();
+  const target = existing.find((order) => order.id === orderId);
+
+  if (!target) {
+    return null;
+  }
+
+  const nextOrders = existing.filter((order) => order.id !== orderId);
+  await writeFile(ordersFile, JSON.stringify(nextOrders, null, 2), "utf8");
+
+  return target;
+}
+
 export async function getOrders(): Promise<OrderWithFinanceSummary[]> {
   const [orders, financeEntries] = await Promise.all([
     readStoredOrders(),
