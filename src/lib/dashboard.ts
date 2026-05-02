@@ -2,6 +2,13 @@ import type { FinanceEntry } from "@/lib/mock-data";
 import type { OrderWithFinanceSummary } from "@/lib/order-store";
 import type { GeneratedReminder } from "@/lib/reminders";
 
+export type ReceiptCalendarCell = {
+  date: string;
+  day: number;
+  isCurrentMonth: boolean;
+  receivedAmount: number;
+};
+
 function parseCurrency(value: string) {
   return Number(value.replace(/[^\d.-]/g, "")) || 0;
 }
@@ -39,6 +46,107 @@ function endOfWeek(date: Date) {
   next.setHours(23, 59, 59, 999);
   next.setDate(next.getDate() + 6);
   return next;
+}
+
+function startOfCalendarMonth(date: Date) {
+  return new Date(date.getFullYear(), date.getMonth(), 1);
+}
+
+function endOfCalendarMonth(date: Date) {
+  return new Date(date.getFullYear(), date.getMonth() + 1, 0);
+}
+
+function toFinanceDate(value: string) {
+  if (!value) {
+    return null;
+  }
+
+  const normalized = value.replace("T", " ").trim();
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(normalized)) {
+    return new Date(`${normalized}T00:00:00`);
+  }
+
+  if (/^\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}/.test(normalized)) {
+    return new Date(normalized.replace(" ", "T"));
+  }
+
+  const parsed = new Date(normalized);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+function toDateKey(date: Date) {
+  const year = date.getFullYear();
+  const month = `${date.getMonth() + 1}`.padStart(2, "0");
+  const day = `${date.getDate()}`.padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
+export function buildReceiptCalendar(financeEntries: FinanceEntry[], now = new Date()) {
+  const monthStart = startOfCalendarMonth(now);
+  const monthEnd = endOfCalendarMonth(now);
+  const leadingOffset = (monthStart.getDay() + 6) % 7;
+  const firstCellDate = new Date(monthStart);
+  firstCellDate.setDate(monthStart.getDate() - leadingOffset);
+
+  const trailingOffset = 6 - ((monthEnd.getDay() + 6) % 7);
+  const lastCellDate = new Date(monthEnd);
+  lastCellDate.setDate(monthEnd.getDate() + trailingOffset);
+
+  const dailyReceivedMap = financeEntries.reduce<Map<string, number>>((map, entry) => {
+    if (entry.type !== "收款") {
+      return map;
+    }
+
+    const entryAt = toFinanceDate(entry.time);
+
+    if (!entryAt) {
+      return map;
+    }
+
+    const dateKey = toDateKey(entryAt);
+    const current = map.get(dateKey) ?? 0;
+    map.set(dateKey, current + parseCurrency(entry.amount));
+    return map;
+  }, new Map());
+
+  const cells: ReceiptCalendarCell[] = [];
+
+  for (
+    const cursor = new Date(firstCellDate);
+    cursor <= lastCellDate;
+    cursor.setDate(cursor.getDate() + 1)
+  ) {
+    const current = new Date(cursor);
+    const dateKey = toDateKey(current);
+
+    cells.push({
+      date: dateKey,
+      day: current.getDate(),
+      isCurrentMonth: current.getMonth() === now.getMonth(),
+      receivedAmount: dailyReceivedMap.get(dateKey) ?? 0,
+    });
+  }
+
+  const monthReceivedTotal = cells
+    .filter((cell) => cell.isCurrentMonth)
+    .reduce((sum, cell) => sum + cell.receivedAmount, 0);
+  const maxDailyReceived = cells
+    .filter((cell) => cell.isCurrentMonth)
+    .reduce((max, cell) => Math.max(max, cell.receivedAmount), 0);
+  const previousMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+
+  return {
+    title: `${now.getFullYear()} 年 ${now.getMonth() + 1} 月入账日历`,
+    monthKey: toDateKey(monthStart).slice(0, 7),
+    previousMonthKey: toDateKey(previousMonth).slice(0, 7),
+    nextMonthKey: toDateKey(nextMonth).slice(0, 7),
+    monthReceivedTotal,
+    maxDailyReceived,
+    cells,
+  };
 }
 
 export function buildDashboardMetrics(

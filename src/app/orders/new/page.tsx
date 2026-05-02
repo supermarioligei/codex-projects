@@ -1,7 +1,12 @@
 import Link from "next/link";
 import { AdminShell } from "@/components/admin-shell";
+import { ClothingSelect } from "@/components/clothing-select";
+import { PaymentAmountFields } from "@/components/payment-amount-fields";
 import { createOrderAction } from "@/app/orders/new/actions";
-import { getOrderById } from "@/lib/order-store";
+import { requireSession } from "@/lib/auth";
+import { getClothingOptions } from "@/lib/clothing-store";
+import { getOrderById, getOrders } from "@/lib/order-store";
+import { getPackageOptions } from "@/lib/package-store";
 import { getActiveStaffByRole } from "@/lib/staff";
 
 const fieldClassName =
@@ -10,14 +15,24 @@ const fieldClassName =
 export default async function NewOrderPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; photographer?: string; conflictOrderId?: string }>;
+  searchParams: Promise<{
+    error?: string;
+    photographer?: string;
+    conflictOrderId?: string;
+    clothingType?: string;
+  }>;
 }) {
+  const user = await requireSession(["owner", "sales"]);
   const params = await searchParams;
-  const [salesStaff, productionManagers, crewStaff] = await Promise.all([
+  const [salesStaff, productionManagers, crewStaff, clothingOptions, packageOptions, existingOrders] = await Promise.all([
     getActiveStaffByRole("sales"),
     getActiveStaffByRole("production_manager"),
     getActiveStaffByRole("photographer"),
+    getClothingOptions(),
+    getPackageOptions(),
+    getOrders(),
   ]);
+  const isSales = user.role === "sales";
   const conflictOrder = params.conflictOrderId
     ? await getOrderById(params.conflictOrderId)
     : null;
@@ -26,12 +41,18 @@ export default async function NewOrderPage({
     <AdminShell
       activeHref="/orders/new"
       title="新建订单"
-      description="录入学校、班级、拍摄安排和收款信息，形成一条完整的业务订单。"
+      description={
+        isSales
+          ? "销售先录入学校/班级、联系方式、城市、合同金额和交付日期，后续导演和拍摄团队由拍摄主管安排。"
+          : "录入学校/班级、联系方式、拍摄安排和收款信息，形成一条完整的业务订单。"
+      }
       aside={
         <>
           <p className="text-sm font-semibold">录入建议</p>
           <p className="mt-2 text-sm leading-6 muted">
-            先录学校、班级和拍摄日期，再填套餐金额和定金，后续才更方便做提醒和流水关联。
+            {isSales
+              ? "先把学校/班级、联系方式、城市、拍摄日期、合同金额和交付日期录完整，后续拍摄主管会补导演和主辅拍安排。"
+              : "先录学校/班级、联系方式和拍摄日期，再填套餐金额和定金，后续才更方便做提醒和流水关联。"}
           </p>
         </>
       }
@@ -47,7 +68,7 @@ export default async function NewOrderPage({
       <section className="soft-card rounded-[1.75rem] p-5">
         {params.error === "missing" ? (
           <div className="mb-5 rounded-2xl border border-[#f0c8b2] bg-[#fff4ee] px-4 py-3 text-sm text-[#a3512d]">
-            请先补全客户名称、联系人、学校、班级、拍摄日期和套餐类型这些必填项。
+            请先补全学校/班级、联系人、联系方式、拍摄日期、套餐类型，以及每笔已收对应的金额和日期。
           </div>
         ) : null}
         {params.error === "conflict" ? (
@@ -67,16 +88,21 @@ export default async function NewOrderPage({
             )}
           </div>
         ) : null}
+        {params.error === "clothing-limit" ? (
+          <div className="mb-5 rounded-2xl border border-[#f0d3a8] bg-[#fff7e8] px-4 py-3 text-sm text-[#8a5a14]">
+            {params.clothingType || "所选服装"} 在这一天已经被 3 张订单占满了，请改选其他服装或调整拍摄日期。
+          </div>
+        ) : null}
 
         <form action={createOrderAction}>
           <div className="grid gap-5 lg:grid-cols-2">
           <label className="text-sm font-medium">
-            客户名称 / 订单标题
+            学校 / 班级
             <input
               name="customer"
               required
               className={fieldClassName}
-              placeholder="例如：星辰幼儿园大一班毕业照"
+              placeholder="例如：星辰幼儿园大一班"
             />
           </label>
           <label className="text-sm font-medium">
@@ -85,30 +111,25 @@ export default async function NewOrderPage({
               name="contact"
               required
               className={fieldClassName}
-              placeholder="例如：刘老师 13800000000"
+              placeholder="例如：刘老师"
             />
           </label>
           <label className="text-sm font-medium">
-            学校 / 机构
+            联系方式
             <input
               name="school"
               required
               className={fieldClassName}
-              placeholder="例如：星辰幼儿园"
+              placeholder="例如：13800000000 / 微信 tongying001"
             />
           </label>
           <label className="text-sm font-medium">
-            园区 / 校区
-            <input name="campus" className={fieldClassName} placeholder="例如：滨江园区" />
+            城市
+            <input name="campus" className={fieldClassName} placeholder="例如：杭州" />
           </label>
           <label className="text-sm font-medium">
-            班级
-            <input
-              name="className"
-              required
-              className={fieldClassName}
-              placeholder="例如：大一班"
-            />
+            人数
+            <input name="peopleCount" className={fieldClassName} placeholder="例如：42 人" />
           </label>
           <label className="text-sm font-medium">
             拍摄地点
@@ -121,11 +142,19 @@ export default async function NewOrderPage({
           <label className="text-sm font-medium">
             拍摄日期
             <input
+              id="shoot-date"
               name="shootDate"
               required
               className={fieldClassName}
-              type="datetime-local"
+              type="date"
             />
+          </label>
+          <label className="text-sm font-medium">
+            时段
+            <select name="shootPeriod" required className={fieldClassName} defaultValue="上午">
+              <option value="上午">上午</option>
+              <option value="下午">下午</option>
+            </select>
           </label>
           <label className="text-sm font-medium">
             套餐类型
@@ -133,20 +162,51 @@ export default async function NewOrderPage({
               <option value="" disabled>
                 请选择套餐
               </option>
-              <option>毕业纪念全套</option>
-              <option>班级合影 + 外景</option>
-              <option>毕业典礼跟拍</option>
-              <option>证件照 + 集体照</option>
+              {packageOptions.map((option) => (
+                <option key={option.id} value={option.name}>
+                  {option.name}
+                </option>
+              ))}
             </select>
+          </label>
+          <label className="text-sm font-medium">
+            服装选择
+            <ClothingSelect
+              options={clothingOptions}
+              bookings={existingOrders
+                .filter((order) => order.clothingType)
+                .reduce<Array<{ clothingType: string; shootDate: string; count: number }>>(
+                  (list, order) => {
+                    const existing = list.find(
+                      (item) =>
+                        item.clothingType === order.clothingType &&
+                        item.shootDate.slice(0, 10) === order.shootDate.slice(0, 10),
+                    );
+
+                    if (existing) {
+                      existing.count += 1;
+                    } else {
+                      list.push({
+                        clothingType: order.clothingType ?? "",
+                        shootDate: order.shootDate,
+                        count: 1,
+                      });
+                    }
+
+                    return list;
+                  },
+                  [],
+                )}
+              shootDateInputId="shoot-date"
+            />
           </label>
           <label className="text-sm font-medium">
             订单金额
             <input name="amount" className={fieldClassName} placeholder="例如：8600" />
           </label>
-          <label className="text-sm font-medium">
-            已收定金
-            <input name="paid" className={fieldClassName} placeholder="例如：4000" />
-          </label>
+          <div className="lg:col-span-2">
+            <PaymentAmountFields />
+          </div>
           <label className="text-sm font-medium">
             订单状态
             <select name="status" className={fieldClassName} defaultValue="待确认">
@@ -159,70 +219,93 @@ export default async function NewOrderPage({
           </label>
           <label className="text-sm font-medium">
             归属销售
-            <select name="salesOwner" defaultValue="" className={fieldClassName}>
-              <option value="">暂未指定</option>
-              {salesStaff.map((member) => (
-                <option key={member.id} value={member.name}>
-                  {member.name} · {member.title}
-                </option>
-              ))}
-            </select>
+            {isSales ? (
+              <>
+                <input
+                  disabled
+                  value={`${user.name} · ${user.username}`}
+                  className={`${fieldClassName} cursor-not-allowed bg-[#f8f2ea] text-[#7d7a74]`}
+                />
+                <input type="hidden" name="salesOwner" value={user.name} />
+              </>
+            ) : (
+              <select name="salesOwner" defaultValue="" className={fieldClassName}>
+                <option value="">暂未指定</option>
+                {salesStaff.map((member) => (
+                  <option key={member.id} value={member.name}>
+                    {member.name} · {member.title}
+                  </option>
+                ))}
+              </select>
+            )}
           </label>
           <label className="text-sm font-medium">
-            导演 / 执行统筹
-            <select name="director" defaultValue="" className={fieldClassName}>
-              <option value="">暂未安排</option>
-              {productionManagers.map((member) => (
-                <option key={member.id} value={member.name}>
-                  {member.name} · {member.title}
-                </option>
-              ))}
-            </select>
+            签单客服
+            <input
+              name="signingClerk"
+              className={fieldClassName}
+              placeholder="例如：小陈"
+            />
           </label>
-          <label className="text-sm font-medium">
-            主拍摄影师
-            <select name="photographer" defaultValue="" className={fieldClassName}>
-              <option value="">暂未安排</option>
-              {crewStaff.map((member) => (
-                <option key={member.id} value={member.name}>
-                  {member.name} · {member.title}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="text-sm font-medium">
-            辅拍摄影师
-            <select name="assistantPhotographer" defaultValue="" className={fieldClassName}>
-              <option value="">暂未安排</option>
-              {crewStaff.map((member) => (
-                <option key={member.id} value={member.name}>
-                  {member.name} · {member.title}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="text-sm font-medium">
-            主拍摄像师
-            <select name="leadVideographer" defaultValue="" className={fieldClassName}>
-              <option value="">暂未安排</option>
-              {crewStaff.map((member) => (
-                <option key={member.id} value={member.name}>
-                  {member.name} · {member.title}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="text-sm font-medium">
-            辅拍摄像师
-            <select name="assistantVideographer" defaultValue="" className={fieldClassName}>
-              <option value="">暂未安排</option>
-              {crewStaff.map((member) => (
-                <option key={member.id} value={member.name}>
-                  {member.name} · {member.title}
-                </option>
-              ))}
-            </select>
-          </label>
+          {isSales ? null : (
+            <>
+              <label className="text-sm font-medium">
+                导演
+                <select name="director" defaultValue="" className={fieldClassName}>
+                  <option value="">暂未安排</option>
+                  {productionManagers.map((member) => (
+                    <option key={member.id} value={member.name}>
+                      {member.name} · {member.title}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="text-sm font-medium">
+                主拍摄影师
+                <select name="photographer" defaultValue="" className={fieldClassName}>
+                  <option value="">暂未安排</option>
+                  {crewStaff.map((member) => (
+                    <option key={member.id} value={member.name}>
+                      {member.name} · {member.title}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="text-sm font-medium">
+                辅拍摄影师
+                <select name="assistantPhotographer" defaultValue="" className={fieldClassName}>
+                  <option value="">暂未安排</option>
+                  {crewStaff.map((member) => (
+                    <option key={member.id} value={member.name}>
+                      {member.name} · {member.title}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="text-sm font-medium">
+                主拍摄像师
+                <select name="leadVideographer" defaultValue="" className={fieldClassName}>
+                  <option value="">暂未安排</option>
+                  {crewStaff.map((member) => (
+                    <option key={member.id} value={member.name}>
+                      {member.name} · {member.title}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="text-sm font-medium">
+                辅拍摄像师
+                <select name="assistantVideographer" defaultValue="" className={fieldClassName}>
+                  <option value="">暂未安排</option>
+                  {crewStaff.map((member) => (
+                    <option key={member.id} value={member.name}>
+                      {member.name} · {member.title}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </>
+          )}
           <label className="text-sm font-medium">
             合同交付日期
             <input name="deliveryDueDate" type="date" className={fieldClassName} />

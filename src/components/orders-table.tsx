@@ -14,7 +14,7 @@ export function OrdersTable({
   return (
     <div className="overflow-hidden rounded-[1.5rem] border border-[color:var(--line)]">
       <div className="hidden grid-cols-[1.2fr_1fr_1fr_0.8fr_0.7fr] gap-3 bg-[#f6efe6] px-5 py-4 text-xs font-semibold uppercase tracking-[0.18em] text-[#6e7066] md:grid">
-        <span>客户 / 班级</span>
+        <span>学校 / 班级</span>
         <span>拍摄时间</span>
         <span>套餐 / 地点</span>
         <span>金额</span>
@@ -37,23 +37,30 @@ export function OrdersTable({
                 {order.customer}
               </Link>
               <p className="mt-1 text-sm muted">
-                {order.school} · {order.className}
+                联系方式：{order.school}
               </p>
               <p className="mt-1 text-sm muted">
                 {order.contact} · {order.id}
               </p>
               <p className="mt-1 text-sm muted">
-                销售：{order.salesOwner || "未指定"} · 导演：{order.director || "未安排"}
+                销售：{order.salesOwner || "未指定"} · 签单客服：{order.signingClerk || "未填写"}
+              </p>
+              <p className="mt-1 text-sm muted">
+                导演：{order.director || "未安排"}
               </p>
             </div>
             <div className="text-sm leading-6">
-              <p>{order.shootDate}</p>
-              <p className="muted">{order.campus}</p>
+              <p>
+                {order.shootDate}
+                {order.shootPeriod ? ` · ${order.shootPeriod}` : ""}
+              </p>
+              <p className="muted">{order.campus || "城市待补充"}</p>
             </div>
             <div className="text-sm leading-6">
               <p>{order.packageName}</p>
               <p className="muted">{order.location}</p>
-              <p className="muted">主拍：{order.photographer || "未安排"}</p>
+              <p className="muted">{order.peopleCount ? `人数：${order.peopleCount}` : "人数待补充"}</p>
+              <p className="muted">服装：{order.clothingType || "未选择"}</p>
             </div>
             <div className="text-sm leading-6">
               <p className="font-semibold">{order.amount}</p>

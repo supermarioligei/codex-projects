@@ -19,7 +19,7 @@ export type ActivityLogEntry = {
   id: string;
   happenedAt: string;
   action: string;
-  entityType: "order" | "finance" | "staff";
+  entityType: "order" | "finance" | "staff" | "clothing" | "package";
   entityId: string;
   entityLabel: string;
   summary: string;

@@ -56,6 +56,10 @@ export function canViewDelivery(role: UserRole) {
   return role === "owner" || role === "production_manager" || role === "delivery_manager";
 }
 
+export function canManageClothing(role: UserRole) {
+  return role === "owner" || role === "production_manager";
+}
+
 function normalizeName(value: string) {
   return value.replace(/\s+/g, "").trim();
 }

@@ -19,11 +19,11 @@ function matchesSearch(order: Awaited<ReturnType<typeof getOrders>>[number], key
   const haystack = [
     order.customer,
     order.school,
-    order.className,
     order.contact,
     order.campus,
     order.packageName,
     order.salesOwner ?? "",
+    order.signingClerk ?? "",
     order.director ?? "",
     order.assistantPhotographer ?? "",
     order.leadVideographer ?? "",
@@ -91,7 +91,7 @@ export default async function OrdersPage({
       value: `¥${orders
         .reduce((sum, order) => sum + parseCurrency(order.amount) - parseCurrency(order.paid), 0)
         .toLocaleString("zh-CN")}`,
-      detail: "可按学校、园区分批跟进",
+      detail: "可按学校/班级、城市分批跟进",
     },
   ];
 
@@ -102,7 +102,7 @@ export default async function OrdersPage({
       description={
         user.role === "photographer"
           ? "只显示已分配给你的订单，方便你专注查看拍摄和执行信息。"
-          : "集中查看每个学校、班级和拍摄场次的进度、金额与回款状态。"
+          : "集中查看每个学校/班级和拍摄场次的进度、金额与回款状态。"
       }
       aside={
         <>
@@ -165,8 +165,8 @@ export default async function OrdersPage({
           </div>
           <div className="grid gap-3 sm:grid-cols-3">
             <div className="rounded-2xl border border-[color:var(--line)] bg-white px-4 py-3 text-sm">
-              <p className="muted">园区筛选</p>
-              <p className="mt-1 font-medium">{new Set(orders.map((order) => order.campus)).size} 个园区</p>
+              <p className="muted">城市筛选</p>
+              <p className="mt-1 font-medium">{new Set(orders.map((order) => order.campus)).size} 个城市</p>
             </div>
             <div className="rounded-2xl border border-[color:var(--line)] bg-white px-4 py-3 text-sm">
               <p className="muted">订单状态</p>
@@ -188,7 +188,7 @@ export default async function OrdersPage({
               name="q"
               defaultValue={searchKeyword}
               className="mt-2 w-full rounded-2xl border border-[color:var(--line)] bg-white px-4 py-3 text-sm outline-none transition placeholder:text-[#93a09d] focus:border-[color:var(--accent)]"
-              placeholder="按客户、学校、班级、联系人、摄影师搜索"
+              placeholder="按学校/班级、联系方式、联系人、签单客服、城市、摄影师搜索"
             />
           </label>
 

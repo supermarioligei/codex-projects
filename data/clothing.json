@@ -1,0 +1,23 @@
+[
+  {
+    "id": "clothing-博士服-428",
+    "name": "博士服",
+    "active": true,
+    "createdAt": "2026-05-02T09:12:31.461Z"
+  },
+  {
+    "id": "clothing-sailor",
+    "name": "海军风",
+    "active": true
+  },
+  {
+    "id": "clothing-gown",
+    "name": "学士服",
+    "active": true
+  },
+  {
+    "id": "clothing-college",
+    "name": "学院风",
+    "active": true
+  }
+]

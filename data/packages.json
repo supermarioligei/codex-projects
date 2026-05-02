@@ -1,0 +1,22 @@
+[
+  {
+    "id": "package-grad-full",
+    "name": "毕业纪念全套",
+    "active": true
+  },
+  {
+    "id": "package-class-outdoor",
+    "name": "班级合影 + 外景",
+    "active": true
+  },
+  {
+    "id": "package-ceremony",
+    "name": "毕业典礼跟拍",
+    "active": true
+  },
+  {
+    "id": "package-id-group",
+    "name": "证件照 + 集体照",
+    "active": true
+  }
+]

@@ -1,4 +1,5 @@
 export type OrderStatus = "待确认" | "待拍摄" | "待选片" | "待交付" | "已完成";
+export type ShootPeriod = "上午" | "下午";
 
 export type FinanceEntryType = "收款" | "退款" | "支出";
 
@@ -23,6 +24,10 @@ export type Order = {
   campus: string;
   className: string;
   shootDate: string;
+  shootPeriod?: ShootPeriod;
+  peopleCount?: string;
+  clothingType?: string;
+  signingClerk?: string;
   location: string;
   packageName: string;
   amount: string;

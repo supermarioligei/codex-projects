@@ -5,14 +5,7 @@ export const navigationItems = [
   {
     label: "工作台",
     href: "/",
-    roles: [
-      "owner",
-      "sales",
-      "production_manager",
-      "finance_director",
-      "delivery_manager",
-      "photographer",
-    ] as UserRole[],
+    roles: ["owner"] as UserRole[],
   },
   {
     label: "订单管理",
@@ -43,10 +36,29 @@ export const navigationItems = [
     href: "/delivery",
     roles: ["owner", "production_manager", "delivery_manager"] as UserRole[],
   },
+  { label: "套餐管理", href: "/packages", roles: ["owner"] as UserRole[] },
+  {
+    label: "服装管理",
+    href: "/clothing",
+    roles: ["owner", "production_manager"] as UserRole[],
+  },
 ];
 
 export function getNavigationForRole(role: UserRole) {
   return navigationItems.filter((item) => item.roles.includes(role));
+}
+
+export function getDefaultRouteForRole(role: UserRole) {
+  const routeMap: Record<UserRole, string> = {
+    owner: "/",
+    sales: "/orders",
+    production_manager: "/schedule",
+    finance_director: "/finance",
+    delivery_manager: "/delivery",
+    photographer: "/orders",
+  };
+
+  return routeMap[role];
 }
 
 export function getRoleSummary(role: UserRole) {

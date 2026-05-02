@@ -3,7 +3,7 @@ import "server-only";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { getFinanceEntries } from "@/lib/finance-store";
-import { seedOrders, type Order, type OrderStatus } from "@/lib/mock-data";
+import { seedOrders, type Order, type OrderStatus, type ShootPeriod } from "@/lib/mock-data";
 import { getDataDirectory } from "@/lib/runtime-config";
 
 const dataDirectory = getDataDirectory();
@@ -15,8 +15,12 @@ export type CreateOrderInput = {
   school: string;
   campus: string;
   className: string;
+  signingClerk: string;
   location: string;
   shootDate: string;
+  shootPeriod: ShootPeriod;
+  peopleCount: string;
+  clothingType: string;
   packageName: string;
   amount: number;
   paid: number;
@@ -37,8 +41,12 @@ export type UpdateOrderInput = {
   school: string;
   campus: string;
   className: string;
+  signingClerk: string;
   location: string;
   shootDate: string;
+  shootPeriod: ShootPeriod;
+  peopleCount: string;
+  clothingType: string;
   packageName: string;
   amount: number;
   status: OrderStatus;
@@ -118,7 +126,11 @@ export async function createOrder(input: CreateOrderInput) {
     school: input.school,
     campus: input.campus,
     className: input.className,
+    signingClerk: input.signingClerk,
     shootDate: normalizeShootDate(input.shootDate),
+    shootPeriod: input.shootPeriod,
+    peopleCount: input.peopleCount,
+    clothingType: input.clothingType,
     location: input.location,
     packageName: input.packageName,
     amount: formatCurrency(input.amount),
@@ -162,8 +174,12 @@ export async function updateOrder(orderId: string, input: UpdateOrderInput) {
             school: input.school,
             campus: input.campus,
             className: input.className,
+            signingClerk: input.signingClerk,
             location: input.location,
             shootDate: normalizeShootDate(input.shootDate),
+            shootPeriod: input.shootPeriod,
+            peopleCount: input.peopleCount,
+            clothingType: input.clothingType,
             packageName: input.packageName,
             amount: formatCurrency(input.amount),
             status: input.status,
@@ -226,6 +242,7 @@ export async function getOrderById(orderId: string) {
 type PhotographerConflictOptions = {
   photographer: string;
   shootDate: string;
+  shootPeriod?: string;
   excludeOrderId?: string;
 };
 
@@ -236,10 +253,12 @@ function normalizeName(value: string) {
 export async function findPhotographerConflict({
   photographer,
   shootDate,
+  shootPeriod,
   excludeOrderId,
 }: PhotographerConflictOptions) {
   const currentPhotographer = normalizeName(photographer);
   const currentShootDate = normalizeShootDate(shootDate);
+  const currentShootPeriod = String(shootPeriod ?? "").trim();
 
   if (!currentPhotographer || !currentShootDate) {
     return null;
@@ -255,8 +274,42 @@ export async function findPhotographerConflict({
 
       return (
         normalizeName(order.photographer ?? "") === currentPhotographer &&
-        normalizeShootDate(order.shootDate) === currentShootDate
+        normalizeShootDate(order.shootDate) === currentShootDate &&
+        String(order.shootPeriod ?? "").trim() === currentShootPeriod
       );
     }) ?? null
   );
+}
+
+function normalizeClothing(value: string) {
+  return value.trim();
+}
+
+function sameShootDay(left: string, right: string) {
+  return normalizeShootDate(left).slice(0, 10) === normalizeShootDate(right).slice(0, 10);
+}
+
+export async function getClothingUsageCount(options: {
+  clothingType: string;
+  shootDate: string;
+  excludeOrderId?: string;
+}) {
+  const currentClothing = normalizeClothing(options.clothingType);
+  const currentShootDate = normalizeShootDate(options.shootDate);
+
+  if (!currentClothing || !currentShootDate) {
+    return 0;
+  }
+
+  const orders = await readStoredOrders();
+  return orders.filter((order) => {
+    if (options.excludeOrderId && order.id === options.excludeOrderId) {
+      return false;
+    }
+
+    return (
+      normalizeClothing(order.clothingType ?? "") === currentClothing &&
+      sameShootDay(order.shootDate, currentShootDate)
+    );
+  }).length;
 }

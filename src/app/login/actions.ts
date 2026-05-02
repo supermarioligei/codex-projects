@@ -9,6 +9,7 @@ import {
   SESSION_USERNAME_COOKIE,
 } from "@/lib/auth";
 import { authenticateStaffAccount } from "@/lib/staff";
+import { getDefaultRouteForRole } from "@/lib/ui";
 
 function readText(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim();
@@ -50,7 +51,7 @@ export async function loginAction(formData: FormData) {
     path: "/",
   });
 
-  redirect("/");
+  redirect(getDefaultRouteForRole(account.role));
 }
 
 export async function logoutAction() {

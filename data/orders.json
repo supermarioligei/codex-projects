@@ -1,1 +1,27 @@
-[]
+[
+  {
+    "id": "ORD-260502-714",
+    "customer": "科技城实验小学校3（13）",
+    "contact": "张老师",
+    "school": "1888888888",
+    "campus": "苏州",
+    "className": "",
+    "shootDate": "2026-05-04",
+    "shootPeriod": "上午",
+    "peopleCount": "45",
+    "location": "操场",
+    "packageName": "班级合影 + 外景",
+    "amount": "¥5,600",
+    "paid": "¥700",
+    "status": "待确认",
+    "salesOwner": "小禾",
+    "director": "",
+    "photographer": "",
+    "assistantPhotographer": "",
+    "leadVideographer": "",
+    "assistantVideographer": "",
+    "deliveryDueDate": "2026-05-15",
+    "notes": "",
+    "createdAt": "2026-05-02T08:46:32.974Z"
+  }
+]

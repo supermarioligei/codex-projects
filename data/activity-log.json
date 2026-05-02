@@ -1,1 +1,62 @@
-[]
+[
+  {
+    "action": "create",
+    "entityType": "clothing",
+    "entityId": "clothing-博士服-428",
+    "entityLabel": "博士服",
+    "summary": "新增服装种类 博士服",
+    "actor": {
+      "id": "owner-zhang",
+      "name": "张总",
+      "username": "zhang",
+      "role": "owner"
+    },
+    "id": "ACT-260502-430",
+    "happenedAt": "2026-05-02T09:12:31.463Z"
+  },
+  {
+    "action": "create",
+    "entityType": "finance",
+    "entityId": "ORD-260502-714",
+    "entityLabel": "科技城实验小学校3（13）第2笔收款",
+    "summary": "创建订单时自动登记收款 科技城实验小学校3（13）第2笔收款",
+    "actor": {
+      "id": "sales-xiaohe",
+      "name": "小禾",
+      "username": "xiaohe",
+      "role": "sales"
+    },
+    "id": "ACT-260502-118",
+    "happenedAt": "2026-05-02T08:46:32.992Z"
+  },
+  {
+    "action": "create",
+    "entityType": "finance",
+    "entityId": "ORD-260502-714",
+    "entityLabel": "科技城实验小学校3（13）第1笔收款",
+    "summary": "创建订单时自动登记收款 科技城实验小学校3（13）第1笔收款",
+    "actor": {
+      "id": "sales-xiaohe",
+      "name": "小禾",
+      "username": "xiaohe",
+      "role": "sales"
+    },
+    "id": "ACT-260502-604",
+    "happenedAt": "2026-05-02T08:46:32.989Z"
+  },
+  {
+    "action": "create",
+    "entityType": "order",
+    "entityId": "ORD-260502-714",
+    "entityLabel": "科技城实验小学校3（13）",
+    "summary": "创建订单 科技城实验小学校3（13）",
+    "actor": {
+      "id": "sales-xiaohe",
+      "name": "小禾",
+      "username": "xiaohe",
+      "role": "sales"
+    },
+    "id": "ACT-260502-388",
+    "happenedAt": "2026-05-02T08:46:32.984Z"
+  }
+]
