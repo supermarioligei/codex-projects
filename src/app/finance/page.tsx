@@ -16,7 +16,7 @@ function toDate(value: string) {
 export default async function FinancePage({
   searchParams,
 }: {
-  searchParams: Promise<{ created?: string; updated?: string }>;
+  searchParams: Promise<{ created?: string; updated?: string; period?: string }>;
 }) {
   await requireSession(["owner", "finance_director"]);
   const [entries, orders] = await Promise.all([getFinanceEntries(), getOrders()]);
@@ -29,12 +29,26 @@ export default async function FinancePage({
   const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
   const yearStart = new Date(now.getFullYear(), 0, 1);
   const yearEnd = new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999);
-  const income = entries
-    .filter((entry) => entry.type === "收款")
-    .reduce((sum, entry) => sum + parseAmount(entry.amount), 0);
-  const expense = entries
-    .filter((entry) => entry.type !== "收款")
-    .reduce((sum, entry) => sum + parseAmount(entry.amount), 0);
+  const selectedPeriod = ["day", "month", "year", "all"].includes(params.period ?? "")
+    ? (params.period as "day" | "month" | "year" | "all")
+    : "all";
+  const filteredEntries = entries.filter((entry) => {
+    const entryAt = toDate(entry.time);
+
+    if (selectedPeriod === "day") {
+      return entryAt >= todayStart && entryAt <= todayEnd;
+    }
+
+    if (selectedPeriod === "month") {
+      return entryAt >= monthStart && entryAt <= monthEnd;
+    }
+
+    if (selectedPeriod === "year") {
+      return entryAt >= yearStart && entryAt <= yearEnd;
+    }
+
+    return true;
+  });
   const linkedCount = entries.filter((entry) => entry.orderId).length;
   const todayIncome = entries
     .filter((entry) => {
@@ -105,6 +119,12 @@ export default async function FinancePage({
       detail: `${linkedCount} 条流水已关联订单，可继续扩展为利润分析`,
     },
   ];
+  const periodLabels = {
+    day: "今天",
+    month: "本月",
+    year: "本年",
+    all: "全部",
+  } as const;
 
   return (
     <AdminShell
@@ -167,26 +187,56 @@ export default async function FinancePage({
               现在已经支持关联订单归属。财务总监可以在这里核对销售归属和主拍执行归属。
             </p>
           </div>
+          <div className="flex flex-wrap gap-2">
+            {(["day", "month", "year", "all"] as const).map((period) => {
+              const isActive = selectedPeriod === period;
+
+              return (
+                <Link
+                  key={period}
+                  href={`/finance?period=${period}`}
+                  className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                    isActive
+                      ? "bg-[color:var(--accent)] text-white shadow-lg shadow-orange-200/70"
+                      : "border border-[color:var(--line)] hover:bg-white"
+                  }`}
+                >
+                  {periodLabels[period]}
+                </Link>
+              );
+            })}
+          </div>
           <div className="grid gap-3 sm:grid-cols-3">
             <div className="rounded-2xl border border-[color:var(--line)] bg-white px-4 py-3 text-sm">
-              <p className="muted">流水总条数</p>
-              <p className="mt-1 font-medium">{entries.length} 条</p>
+              <p className="muted">{periodLabels[selectedPeriod]}流水</p>
+              <p className="mt-1 font-medium">{filteredEntries.length} 条</p>
             </div>
             <div className="rounded-2xl border border-[color:var(--line)] bg-white px-4 py-3 text-sm">
-              <p className="muted">收款条数</p>
+              <p className="muted">{periodLabels[selectedPeriod]}收款</p>
               <p className="mt-1 font-medium">
-                {entries.filter((entry) => entry.type === "收款").length} 条
+                {filteredEntries.filter((entry) => entry.type === "收款").length} 条
               </p>
             </div>
             <div className="rounded-2xl border border-[color:var(--line)] bg-white px-4 py-3 text-sm">
-              <p className="muted">总流水规模</p>
-              <p className="mt-1 font-medium">¥{(income - expense).toLocaleString("zh-CN")} 净流入</p>
+              <p className="muted">{periodLabels[selectedPeriod]}净流入</p>
+              <p className="mt-1 font-medium">
+                ¥
+                {(
+                  filteredEntries
+                    .filter((entry) => entry.type === "收款")
+                    .reduce((sum, entry) => sum + parseAmount(entry.amount), 0) -
+                  filteredEntries
+                    .filter((entry) => entry.type !== "收款")
+                    .reduce((sum, entry) => sum + parseAmount(entry.amount), 0)
+                ).toLocaleString("zh-CN")}{" "}
+                净流入
+              </p>
             </div>
           </div>
         </div>
 
         <div className="mt-5">
-          <FinanceTable entries={entries} ordersById={ordersById} />
+          <FinanceTable entries={filteredEntries} ordersById={ordersById} />
         </div>
       </section>
     </AdminShell>

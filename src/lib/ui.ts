@@ -51,9 +51,9 @@ export function getNavigationForRole(role: UserRole) {
 export function getDefaultRouteForRole(role: UserRole) {
   const routeMap: Record<UserRole, string> = {
     owner: "/",
-    sales: "/orders",
+    sales: "/orders?status=%E5%BE%85%E7%A1%AE%E8%AE%A4",
     production_manager: "/schedule",
-    finance_director: "/finance",
+    finance_director: "/finance?period=month",
     delivery_manager: "/delivery",
     photographer: "/orders",
   };

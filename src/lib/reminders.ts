@@ -93,13 +93,21 @@ export function generateReminders(
     }
 
     if (order.outstandingAmount > 0 && shootAt <= endOfDay(addDays(now, 7))) {
+      const isShootToday = shootAt >= todayStart && shootAt <= endOfDay(now);
+
       reminders.push({
         id: `payment-${order.id}`,
-        title: `待跟进尾款：${order.customer}`,
-        detail: `当前还待收 ¥${order.outstandingAmount.toLocaleString(
-          "zh-CN",
-        )}，建议在拍摄前或交付前确认回款节点。`,
-        level: order.outstandingAmount >= 5000 ? "高优先级" : "中优先级",
+        title: isShootToday
+          ? `今日拍摄尾款提醒：${order.customer}`
+          : `待跟进尾款：${order.customer}`,
+        detail: isShootToday
+          ? `今天拍摄，当前仍待收尾款 ¥${order.outstandingAmount.toLocaleString(
+              "zh-CN",
+            )}，请销售及时跟进回款。`
+          : `当前还待收 ¥${order.outstandingAmount.toLocaleString(
+              "zh-CN",
+            )}，建议在拍摄前或交付前确认回款节点。`,
+        level: isShootToday || order.outstandingAmount >= 5000 ? "高优先级" : "中优先级",
         category: "财务提醒",
         href: `/orders/${order.id}`,
         orderId: order.id,
